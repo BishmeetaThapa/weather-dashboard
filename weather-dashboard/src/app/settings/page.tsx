@@ -45,26 +45,25 @@ export default function SettingsPage() {
                   <div className="w-24 h-24 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600">
                     <User className="w-12 h-12" />
                   </div>
-                  <button className="absolute -bottom-2 -right-2 bg-white border border-gray-100 shadow-sm p-2 rounded-lg text-gray-400 hover:text-blue-600 transition-colors">
-                    <Palette className="w-4 h-4" />
-                  </button>
+                  {/* TODO: Add profile picture upload when auth is re-implemented */}
                 </div>
 
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-gray-700">Full Name</label>
-                    <Input defaultValue="Alex Rivera" />
+                    <Input defaultValue="Guest User" disabled />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-gray-700">Email Address</label>
-                    <Input defaultValue="alex.rivera@example.com" type="email" />
+                    <Input defaultValue="guest@example.com" type="email" disabled />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-gray-700">Location</label>
                     <Input defaultValue="Kathmandu, Nepal" />
                   </div>
                   <div className="space-y-2 text-right flex items-end justify-end">
-                    <Button onClick={handleSave}>Save Changes</Button>
+                    {/* TODO: Enable profile editing when auth is re-implemented */}
+                    <Button onClick={handleSave} disabled>Save Changes</Button>
                   </div>
                 </div>
               </div>
@@ -146,27 +145,29 @@ export default function SettingsPage() {
             </div>
             <Card>
               <CardContent className="p-6 space-y-6">
+                {/* TODO: Re-implement security features when auth is added back */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Lock className="w-4 h-4 text-gray-400" />
                     <span className="text-sm font-semibold text-gray-700">Two-Factor Auth</span>
                   </div>
-                  <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">Active</span>
+                  <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-lg">Not Available</span>
                 </div>
-                <Button variant="outline" className="w-full">Change Password</Button>
+                <Button variant="outline" className="w-full" disabled>Change Password</Button>
               </CardContent>
             </Card>
           </section>
         </div>
 
         {/* Danger Zone */}
-        <Card className="border-rose-100 bg-rose-50/30">
+        {/* TODO: Re-implement account deletion when auth is added back */}
+        <Card className="border-gray-100 bg-gray-50/30">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold text-rose-600">Danger Zone</p>
-              <p className="text-xs text-rose-500">Deactivate your account and delete all data</p>
+              <p className="text-sm font-bold text-gray-600">Account Management</p>
+              <p className="text-xs text-gray-500">Account features will be available when authentication is re-implemented</p>
             </div>
-            <Button variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-100">Delete Account</Button>
+            <Button variant="outline" className="text-gray-600 border-gray-200" disabled>Delete Account</Button>
           </CardContent>
         </Card>
       </div>

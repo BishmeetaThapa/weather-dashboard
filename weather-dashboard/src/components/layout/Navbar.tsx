@@ -46,12 +46,12 @@ export function Navbar({ title }: NavbarProps) {
                     <div className="h-8 w-[1px] bg-gray-100 mx-2"></div>
 
                     <button className="flex items-center gap-3 p-1 rounded-xl hover:bg-gray-50 transition-colors">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <User className="w-4 h-4 text-blue-600" />
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <User className="w-4 h-4 text-gray-600" />
                         </div>
                         <div className="text-left hidden sm:block">
-                            <p className="text-xs font-semibold text-gray-900 leading-none">Bishmeeta</p>
-                            <p className="text-[10px] text-gray-500 leading-tight">Pro Account</p>
+                            <p className="text-xs font-semibold text-gray-900 leading-none">Guest User</p>
+                            <p className="text-[10px] text-gray-500 leading-tight">Demo Mode</p>
                         </div>
                     </button>
                 </div>

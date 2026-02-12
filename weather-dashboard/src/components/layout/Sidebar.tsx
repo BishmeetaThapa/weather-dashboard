@@ -10,7 +10,6 @@ import {
     Thermometer,
     MapPin,
     Settings,
-    LogOut,
     Cloud
 } from "lucide-react";
 
@@ -24,7 +23,6 @@ const menuItems = [
 
 const secondaryItems = [
     { icon: Settings, label: "Settings", href: "/settings" },
-    { icon: LogOut, label: "Logout", href: "/login" },
 ];
 
 export function Sidebar() {
