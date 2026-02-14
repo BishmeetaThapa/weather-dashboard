@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/cloud-sun.svg" width="80" height="80" alt="SkyCast Logo" />
-  <h1>SkyCast: Real-Time Weather Dashboard</h1>
+  <h1> Real-Time Weather Dashboard</h1>
   <p>A modern, high-performance SaaS weather dashboard focused on the Nepal region, built with Next.js 15 and real-time API integration.</p>
 
   <div>
@@ -14,7 +14,7 @@
 
 ## 🚀 Overview
 
-**SkyCast** is a production-ready weather forecasting application designed for professional monitoring and personal use. It focuses on delivering accurate, real-time weather metrics for **Kathmandu and major cities in Nepal**, integrated with a functional backend for personalized location tracking.
+**Weather dashboard** is a production-ready weather forecasting application designed for professional monitoring and personal use. It focuses on delivering accurate, real-time weather metrics for **Kathmandu and major cities in Nepal**, integrated with a functional backend for personalized location tracking.
 
 ### 🌟 Key Features
 
@@ -44,10 +44,7 @@
       <b>📅 7-Day Forecast</b><br/>
       Detailed weekly breakdown with modern icons and precision metrics.
     </td>
-    <td>
-      <b>🔐 Authenticated Access</b><br/>
-      Professional Login/Register modules ready for session or JWT auth.
-    </td>
+    
   </tr>
 </table>
 
