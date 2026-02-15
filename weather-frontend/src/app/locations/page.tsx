@@ -11,6 +11,7 @@ import { LocationModal } from "@/components/weather/LocationModal";
 export default function LocationsPage() {
     const [locations, setLocations] = useState<Location[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
@@ -19,17 +20,12 @@ export default function LocationsPage() {
 
     const loadLocations = async () => {
         try {
+            setError(null);
             const data = await locationService.getLocations();
             setLocations(data);
         } catch (error) {
             console.error("Failed to load locations:", error);
-            // Fallback/Mock for local demo if backend is not yet running
-            if (locations.length === 0) {
-                setLocations([
-                    { id: '1', name: "Kathmandu", region: "Bagmati", lat: 27.7172, lon: 85.3240 },
-                    { id: '2', name: "Pokhara", region: "Gandaki", lat: 28.2096, lon: 83.9856 }
-                ]);
-            }
+            setError("Unable to connect to the backend. Please ensure the server is running.");
         } finally {
             setLoading(false);
         }
@@ -37,36 +33,29 @@ export default function LocationsPage() {
 
     const handleAddLocation = async (name: string) => {
         try {
+            setError(null);
             // In a real app, we'd geocode the name first
             const newLoc = await locationService.addLocation({
                 name,
-                lat: 27.7, // Mock lat
-                lon: 85.3, // Mock lon
+                lat: 27.7, // TODO: Implement geocoding
+                lon: 85.3, // TODO: Implement geocoding
                 region: "Nepal"
             });
             setLocations([...locations, newLoc]);
         } catch (error) {
             console.error("Failed to add location:", error);
-            // Local optimistic update for UI demo
-            const mockLoc: Location = {
-                id: Math.random().toString(),
-                name,
-                lat: 27.7,
-                lon: 85.3,
-                region: "Added Location"
-            };
-            setLocations([...locations, mockLoc]);
+            setError("Failed to add location. Please try again.");
         }
     };
 
     const handleDeleteLocation = async (id: string) => {
         try {
+            setError(null);
             await locationService.deleteLocation(id);
             setLocations(locations.filter(l => l.id !== id));
         } catch (error) {
             console.error("Failed to delete location:", error);
-            // Local update for UI demo
-            setLocations(locations.filter(l => l.id !== id));
+            setError("Failed to delete location. Please try again.");
         }
     };
 
@@ -83,6 +72,23 @@ export default function LocationsPage() {
                         Add New City
                     </Button>
                 </div>
+
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
+                            <span className="text-red-600 text-xs font-bold">!</span>
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-medium text-red-900">{error}</p>
+                        </div>
+                        <button
+                            onClick={loadLocations}
+                            className="text-sm font-medium text-red-600 hover:text-red-700 underline"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
 
                 {loading ? (
                     <div className="flex items-center justify-center h-64">

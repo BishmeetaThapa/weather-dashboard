@@ -17,51 +17,26 @@ export interface Location {
     region?: string;
 }
 
-// Fallback mock data for demo purposes
-const MOCK_LOCATIONS: Location[] = [
-    { id: '1', name: "Kathmandu", region: "Bagmati", lat: 27.7172, lon: 85.3240 },
-    { id: '2', name: "Pokhara", region: "Gandaki", lat: 28.2096, lon: 83.9856 },
-    { id: '3', name: "Paton", region: "Bagmati", lat: 27.671, lon: 85.324 },
-];
-
 export const locationService = {
     getLocations: async (): Promise<Location[]> => {
-        try {
-            const response = await apiClient.get('/locations');
-            return response.data;
-        } catch (error) {
-            console.warn("Backend unreachable, using mock data for locations.");
-            return MOCK_LOCATIONS;
-        }
+        const response = await apiClient.get('/locations');
+        return response.data;
     },
 
     addLocation: async (location: Omit<Location, 'id'>): Promise<Location> => {
-        try {
-            const response = await apiClient.post('/locations', location);
-            return response.data;
-        } catch (error) {
-            console.warn("Backend unreachable, simulating add location locally.");
-            return { ...location, id: Math.random().toString() };
-        }
+        const response = await apiClient.post('/locations', location);
+        return response.data;
     },
 
     updateLocation: async (id: string, location: Partial<Location>): Promise<Location> => {
-        try {
-            const response = await apiClient.put(`/locations/${id}`, location);
-            return response.data;
-        } catch (error) {
-            console.warn("Backend unreachable, simulating update locally.");
-            return { id, name: "", lat: 0, lon: 0, ...location } as Location;
-        }
+        const response = await apiClient.put(`/locations/${id}`, location);
+        return response.data;
     },
 
     deleteLocation: async (id: string): Promise<void> => {
-        try {
-            await apiClient.delete(`/locations/${id}`);
-        } catch (error) {
-            console.warn("Backend unreachable, simulating delete locally.");
-        }
+        await apiClient.delete(`/locations/${id}`);
     },
 };
 
 export default apiClient;
+
