@@ -1,161 +1,145 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { MapPin, Navigation, Loader2, AlertCircle } from "lucide-react";
+import WeatherBackground from "@/components/weather/WeatherBackground";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent } from "@/components/ui/Card";
-import { MapPin, Sun, Cloud, CloudRain, Navigation, Trash2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { locationService, Location } from "@/lib/apiClient";
-import { LocationModal } from "@/components/weather/LocationModal";
+import { weatherService } from "@/lib/apiClient";
 
 export default function LocationsPage() {
-    const [locations, setLocations] = useState<Location[]>([]);
+    const [locations, setLocations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    useEffect(() => {
-        loadLocations();
-    }, []);
-
-    const loadLocations = async () => {
+    const loadLocations = useCallback(async () => {
         try {
+            setLoading(true);
             setError(null);
-            const data = await locationService.getLocations();
+            const data = await weatherService.getWeatherData();
             setLocations(data);
         } catch (error) {
             console.error("Failed to load locations:", error);
-            setError("Unable to connect to the backend. Please ensure the server is running.");
+            setError("Unable to connect to the weather network.");
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
-    const handleAddLocation = async (name: string) => {
-        try {
-            setError(null);
-            // In a real app, we'd geocode the name first
-            const newLoc = await locationService.addLocation({
-                name,
-                lat: 27.7, // TODO: Implement geocoding
-                lon: 85.3, // TODO: Implement geocoding
-                region: "Nepal"
-            });
-            setLocations([...locations, newLoc]);
-        } catch (error) {
-            console.error("Failed to add location:", error);
-            setError("Failed to add location. Please try again.");
-        }
-    };
-
-    const handleDeleteLocation = async (id: string) => {
-        try {
-            setError(null);
-            await locationService.deleteLocation(id);
-            setLocations(locations.filter(l => l.id !== id));
-        } catch (error) {
-            console.error("Failed to delete location:", error);
-            setError("Failed to delete location. Please try again.");
-        }
-    };
+    useEffect(() => {
+        loadLocations();
+    }, [loadLocations]);
 
     return (
-        <MainLayout pageTitle="Weather Locations">
-            <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                        <h2 className="text-xl font-bold text-gray-900">Tracked Locations</h2>
-                        <p className="text-sm text-gray-500">Manage cities you want to track across your dashboard.</p>
-                    </div>
-                    <Button onClick={() => setIsModalOpen(true)}>
-                        <Navigation className="w-4 h-4 mr-2" />
-                        Add New City
-                    </Button>
-                </div>
-
-                {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mt-0.5">
-                            <span className="text-red-600 text-xs font-bold">!</span>
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-sm font-medium text-red-900">{error}</p>
-                        </div>
-                        <button
-                            onClick={loadLocations}
-                            className="text-sm font-medium text-red-600 hover:text-red-700 underline"
+        <MainLayout pageTitle="Global Nodes">
+            <div className="font-sans overflow-x-hidden">
+                <WeatherBackground condition="Clear" isNight={false} />
+                
+                <main className="max-w-7xl mx-auto px-4 py-12 relative z-10">
+                    <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                        <motion.div 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="space-y-2"
                         >
-                            Retry
-                        </button>
-                    </div>
-                )}
+                            <h1 className="text-4xl font-extrabold tracking-tight">Weather Locations</h1>
+                            <p className="text-white/60 font-medium">View tracked cities and regions across your global network.</p>
+                        </motion.div>
+                    </header>
 
-                {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {locations.length === 0 ? (
-                            <Card className="col-span-full border-dashed border-2 py-20 bg-gray-50/50">
-                                <CardContent className="flex flex-col items-center justify-center text-center space-y-4">
-                                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                        <MapPin className="w-8 h-8 text-gray-300" />
+                    <AnimatePresence mode="wait">
+                        {error && (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="bg-red-500/10 border border-red-500/20 backdrop-blur-xl rounded-3xl p-6 mb-8 flex items-center justify-between"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <AlertCircle className="text-red-400" />
+                                    <p className="text-red-400 font-medium">{error}</p>
+                                </div>
+                                <button 
+                                    onClick={loadLocations}
+                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold transition-all"
+                                >
+                                    Retry Sync
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center h-64 gap-4">
+                            <Loader2 className="w-12 h-12 text-sky-400 animate-spin" />
+                            <p className="text-white/40 font-medium tracking-widest uppercase text-xs">Synchronizing Nodes</p>
+                        </div>
+                    ) : (
+                        <motion.div 
+                            layout
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                        >
+                            {locations.length === 0 ? (
+                                <div className="col-span-full py-32 flex flex-col items-center text-center space-y-6 bg-white/5 backdrop-blur-md rounded-[3rem] border border-white/10 border-dashed">
+                                    <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center">
+                                        <MapPin size={40} className="text-white/20" />
                                     </div>
-                                    <div className="space-y-1">
-                                        <p className="font-bold text-gray-900">No locations tracked yet</p>
-                                        <p className="text-sm text-gray-500">Add your first city to see weather updates here.</p>
+                                    <div className="space-y-2">
+                                        <h3 className="text-2xl font-bold text-white">No locations tracked</h3>
+                                        <p className="text-white/40 italic">Initialize your first data nodes from the administrative control panel.</p>
                                     </div>
-                                    <Button variant="outline" size="sm" onClick={() => setIsModalOpen(true)}>
-                                        Add Now
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            locations.map((city) => (
-                                <Card key={city.id} className="group hover:border-blue-200 transition-all cursor-pointer overflow-hidden relative">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteLocation(city.id);
-                                        }}
-                                        className="absolute top-4 right-4 p-2 rounded-lg bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 hover:bg-rose-50 hover:text-rose-600 transition-all z-10"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                    <CardContent className="p-0">
-                                        <div className="p-6">
-                                            <div className="flex items-start justify-between pr-8">
+                                </div>
+                            ) : (
+                                <AnimatePresence>
+                                    {locations.map((node, index) => (
+                                        <motion.div 
+                                            key={node._id}
+                                            layout
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.9 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            className="group relative overflow-hidden bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[2.5rem] p-8 hover:bg-white/15 transition-all shadow-lg hover:shadow-2xl"
+                                        >
+                                            <div className="flex justify-between items-start mb-6">
                                                 <div className="space-y-1">
-                                                    <div className="flex items-center gap-2 text-gray-400 group-hover:text-blue-500 transition-colors">
-                                                        <MapPin className="w-4 h-4" />
-                                                        <span className="text-xs font-bold uppercase tracking-widest">{city.region || "NEPAL"}</span>
+                                                    <div className="flex items-center gap-2 text-sky-400 mb-2">
+                                                        <MapPin size={14} />
+                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">{node.country}</span>
                                                     </div>
-                                                    <h3 className="text-xl font-bold text-gray-900">{city.name}</h3>
+                                                    <h3 className="text-3xl font-bold tracking-tight">{node.city}</h3>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-3xl font-black text-gray-900">28°</p>
-                                                    <p className="text-xs font-semibold text-gray-500">Sunny</p>
+                                                    <p className="text-4xl font-black text-white group-hover:text-sky-400 transition-colors duration-300">{Math.round(node?.main?.temp ?? 0)}°</p>
+                                                    <p className="text-xs font-semibold text-white/40 uppercase tracking-widest mt-1">{node?.weather?.[0]?.main ?? "N/A"}</p>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="px-6 py-3 bg-gray-50 flex items-center justify-between group-hover:bg-blue-50 transition-colors">
-                                            <span className="text-sm font-medium text-gray-500">Current Temperature</span>
-                                            <Sun className="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform" />
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        )}
-                    </div>
-                )}
-            </div>
 
-            <LocationModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onAdd={handleAddLocation}
-            />
+                                            <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                                                <div className="flex items-center gap-4">
+                                                    <Link href={`/forecast?city=${node.city}`}>
+                                                        <button 
+                                                            className="p-3 bg-white/5 rounded-2xl hover:bg-sky-500/10 hover:text-sky-400 transition-all text-white/40"
+                                                            title="View Detailed Forecast"
+                                                        >
+                                                            <Navigation size={18} />
+                                                        </button>
+                                                    </Link>
+                                                </div>
+                                                <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest italic">{node?.weather?.[0]?.description ?? "No description"}</span>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            )}
+                        </motion.div>
+                    )}
+                </main>
+            </div>
         </MainLayout>
     );
 }
+

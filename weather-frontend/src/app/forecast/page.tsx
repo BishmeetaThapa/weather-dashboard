@@ -1,152 +1,142 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { fetchWeather, FullWeatherData } from "@/lib/weatherApi";
+import SearchBar from "@/components/weather/SearchBar";
+import CurrentWeather from "@/components/weather/CurrentWeather";
+import HourlyForecast from "@/components/weather/HourlyForecast";
+import WeeklyForecast from "@/components/weather/WeeklyForecast";
+import WeatherDetails from "@/components/weather/WeatherDetails";
+import WeatherBackground from "@/components/weather/WeatherBackground";
+import WeatherSkeleton from "@/components/weather/WeatherSkeleton";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent } from "@/components/ui/Card";
-import { fetchForecast, ForecastData, getWeatherIcon } from "@/lib/weatherApi";
-import { WeatherAdminPanel } from "@/components/weather/WeatherAdminPanel";
-import { Sun, CloudRain, CloudLightning, Cloud, Wind, MapPin, Calendar, AlertCircle } from "lucide-react";
 
 export default function ForecastPage() {
-  const [forecast, setForecast] = useState<ForecastData | null>(null);
+  const [weather, setWeather] = useState<FullWeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [city, setCity] = useState("Kathmandu");
 
-  const getData = useCallback(async () => {
+  const loadData = useCallback(async (searchCity: string) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchForecast("Kathmandu"); // Defaulting to Kathmandu
-      setForecast(data);
+      const data = await fetchWeather(searchCity);
+      setWeather(data);
     } catch (err: any) {
-      console.error("Failed to fetch forecast:", err);
-      if (err.message.includes("No weather data found")) {
-        setError("No forecast data found. Please add data using the admin panel.");
-      } else {
-        setError("Unable to connect to the backend. Please ensure the server is running.");
-      }
-      setForecast(null);
+      console.error("Failed to fetch weather:", err);
+      setError(err.message || "Failed to load weather data.");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    getData();
-  }, [getData]);
+    loadData(city);
+  }, [city, loadData]);
 
-  const getLucideIcon = (description: string) => {
-    const iconName = getWeatherIcon(description);
-    if (iconName === 'sun') return Sun;
-    if (iconName === 'cloud-rain') return CloudRain;
-    if (iconName === 'zap') return CloudLightning;
-    if (iconName === 'cloud') return Cloud;
-    if (iconName === 'wind') return Wind;
-    if (iconName === 'cloud-sun') return Sun;
-    return Cloud;
+  const handleSearch = (newCity: string) => {
+    setCity(newCity);
   };
 
-  if (loading && !forecast && !error) {
+  const currentHour = new Date().getHours();
+  const isNight = currentHour >= 18 || currentHour <= 6;
+
+  if (loading && !weather) {
     return (
-      <MainLayout pageTitle="Loading Forecast...">
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+      <MainLayout pageTitle="Forecasting Intelligence">
+        <WeatherBackground condition="Clear" isNight={isNight} />
+        <WeatherSkeleton />
       </MainLayout>
     );
   }
 
   return (
-    <MainLayout pageTitle="7-Day Forecast">
-      <div className="space-y-8">
+    <MainLayout pageTitle="Atmospheric Forecast">
+      <div className="font-sans text-white">
+        <WeatherBackground 
+          condition={weather?.condition || "Clear"} 
+          isNight={isNight} 
+        />
 
-        {/* Error / Empty State Handling */}
-        {error && !forecast && (
-          <div className="space-y-6">
-            <Card className="border-amber-200 bg-amber-50">
-              <CardContent className="p-6 flex items-center gap-4 text-amber-800">
-                <AlertCircle className="w-8 h-8" />
-                <div>
-                  <h3 className="font-bold text-lg">No Data Available</h3>
-                  <p>{error}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <WeatherAdminPanel onDataAdded={getData} />
-          </div>
-        )}
+        <main className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="search"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <SearchBar onSearch={handleSearch} />
+            </motion.div>
+          </AnimatePresence>
 
-        {forecast && (
-          <>
-            {/* Header Info */}
-            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
-                  <MapPin className="w-8 h-8 text-blue-600" />
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-md mx-auto mt-10 p-6 bg-red-500/10 backdrop-blur-xl border border-red-500/20 rounded-3xl text-center"
+            >
+              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">Oops! Something went wrong</h3>
+              <p className="text-white/60 mb-6">{error}</p>
+              <button 
+                onClick={() => loadData(city)}
+                className="flex items-center gap-2 mx-auto px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/20"
+              >
+                <RefreshCw size={18} />
+                Try Again
+              </button>
+            </motion.div>
+          )}
+
+          {weather && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 mt-4">
+              {/* Left Column: Current & Details */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1, duration: 0.6 }}
+                className="md:col-span-8 space-y-8"
+              >
+                <CurrentWeather data={weather} />
+                
+                <div className="space-y-4">
+                  <HourlyForecast hourly={weather.hourly} />
+                  <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider ml-2">Extra Insights</h3>
+                  <WeatherDetails data={weather} />
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-blue-600 uppercase tracking-widest">Showing Forecast For</p>
-                  <h2 className="text-3xl font-black text-gray-900">{forecast.city}</h2>
+              </motion.div>
+
+              {/* Right Column: Weekly Forecast */}
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+                className="md:col-span-4"
+              >
+                <WeeklyForecast daily={weather.daily} />
+                
+                {/* Premium Promo / Info Card */}
+                <div className="mt-8 p-6 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden relative group">
+                  <div className="relative z-10">
+                    <h4 className="text-lg font-bold text-white mb-2">Weather Intelligence</h4>
+                    <p className="text-white/60 text-sm leading-relaxed">
+                      Analyzing real-time atmospheric vectors for extreme precision in {weather.city}.
+                    </p>
+                  </div>
+                  <div className="absolute -right-4 -bottom-4 opacity-10 transform group-hover:scale-110 transition-transform duration-700">
+                    <RefreshCw size={120} className="text-white" />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl text-gray-500 font-medium">
-                <Calendar className="w-4 h-4" />
-                <span>{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
-              </div>
+              </motion.div>
             </div>
-
-            {/* Forecast Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-              {forecast.list.map((day, index) => {
-                const Icon = getLucideIcon(day.description);
-                const isToday = index === 0;
-
-                return (
-                  <Card
-                    key={day.date}
-                    className={`overflow-hidden transition-all hover:translate-y-[-4px] hover:shadow-lg ${isToday ? 'border-blue-200 bg-blue-50/50' : 'border-gray-100'}`}
-                  >
-                    <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                        {isToday ? 'Today' : new Date(day.date).toLocaleDateString(undefined, { weekday: 'short' })}
-                      </p>
-
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isToday ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-gray-100 text-gray-600'}`}>
-                        <Icon className="w-8 h-8" />
-                      </div>
-
-                      <div className="space-y-1">
-                        <p className="text-2xl font-black text-gray-900">{Math.round(day.temp_max)}°</p>
-                        <p className="text-sm font-bold text-gray-400">{Math.round(day.temp_min)}°</p>
-                      </div>
-
-                      <p className="text-xs font-bold text-blue-600 uppercase tracking-tighter truncate w-full">
-                        {day.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Info Card */}
-            <Card className="bg-gray-900 border-none text-white overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-8 opacity-10">
-                <Wind className="w-40 h-40" />
-              </div>
-              <CardContent className="p-8 space-y-4 relative z-10">
-                <div className="flex bg-white/10 w-fit px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest text-blue-300">
-                  Pro Tip
-                </div>
-                <h3 className="text-2xl font-bold">Weather Insights</h3>
-                <p className="text-gray-400 max-w-xl">
-                  Our 7-day forecast combines multiple data points to give you the most accurate prediction for {forecast.city}.
-                  Stay ahead of the weather and plan your week with confidence.
-                </p>
-              </CardContent>
-            </Card>
-          </>
-        )}
+          )}
+        </main>
       </div>
     </MainLayout>
   );
