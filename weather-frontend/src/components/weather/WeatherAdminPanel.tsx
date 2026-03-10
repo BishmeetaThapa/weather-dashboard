@@ -13,9 +13,10 @@ export function WeatherAdminPanel({ onDataAdded }: { onDataAdded: () => void }) 
     const handleSeedData = async () => {
         setLoading(true);
         setMessage("");
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
         try {
             // Seed Current Weather
-            await axios.post("http://localhost:5000/api/weather", {
+            await axios.post(`${baseUrl}/api/weather`, {
                 city: city,
                 country: "NP",
                 coordinates: { lat: 27.7172, lon: 85.324 },
@@ -53,61 +54,59 @@ export function WeatherAdminPanel({ onDataAdded }: { onDataAdded: () => void }) 
                 };
             });
 
-            // We need to loop or create a bulk endpoint. 
-            // For now, let's just create one entry to avoid complexity or loop if backend supports it.
-            // Our backend forecast model is single day entry? 
-            // Checking models/forecast.js... it looks like single entry.
-            // Let's loop.
             for (const day of forecastList) {
-                await axios.post("http://localhost:5000/api/forecast", day);
+                await axios.post(`${baseUrl}/api/forecast`, day);
             }
 
-            setMessage("✅ Weather data seeded successfully!");
+            setMessage("✅ Data Synchronized Successfully!");
             onDataAdded();
-        } catch (error) {
+        } catch (error: unknown) {
             console.error(error);
-            setMessage("❌ Failed to seed data.");
+            const errorMessage = error instanceof Error ? "❌ System Synchronization Failed: " + error.message : "❌ System Synchronization Failed.";
+            setMessage(errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Card className="mb-8 border-dashed border-2 border-blue-200 bg-blue-50/50">
+        <Card className="mb-8 border-dashed border-2 border-primary/20 bg-primary/5 backdrop-blur-xl rounded-[2.5rem]">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-blue-700">
-                    <Cloud className="w-5 h-5" />
-                    Admin: Populate Database
+                <CardTitle className="flex items-center gap-3 text-primary text-sm font-black uppercase tracking-[0.3em]">
+                    <div className="p-2 bg-primary/20 rounded-lg">
+                      <Cloud className="w-4 h-4" />
+                    </div>
+                    Infrastucture Controller: Populate Matrix
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col sm:flex-row gap-4 items-end">
-                    <div className="w-full sm:w-auto flex-1">
-                        <label className="text-sm font-medium text-blue-900 block mb-2">City Name</label>
+                <div className="flex flex-col sm:flex-row gap-6 items-end mt-4">
+                    <div className="w-full sm:w-auto flex-1 group">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2 px-1">Target Geographic City</label>
                         <input
                             type="text"
                             value={city}
                             onChange={(e) => setCity(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter city..."
+                            className="w-full px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold"
+                            placeholder="Identify city node..."
                         />
                     </div>
                     <button
                         onClick={handleSeedData}
                         disabled={loading}
-                        className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                        className="px-8 py-3 bg-primary text-primary-foreground font-black rounded-2xl hover:bg-primary/90 disabled:opacity-50 transition-all flex items-center gap-3 shadow-lg shadow-primary/20 uppercase text-[10px] tracking-widest h-[52px]"
                     >
                         {loading ? (
-                            "Seeding..."
+                            "Synchronizing..."
                         ) : (
                             <>
                                 <Sun className="w-4 h-4" />
-                                Seed Data
+                                Initiate Seeding
                             </>
                         )}
                     </button>
                 </div>
-                {message && <p className="mt-4 text-sm font-bold text-gray-700">{message}</p>}
+                {message && <p className="mt-6 text-[10px] font-black text-accent uppercase tracking-widest bg-white/5 py-2 px-4 rounded-xl w-fit border border-white/5 shadow-inner">{message}</p>}
             </CardContent>
         </Card>
     );
