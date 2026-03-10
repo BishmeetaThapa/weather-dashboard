@@ -13,9 +13,10 @@ export function Button({
     ...props
 }: ButtonProps) {
     const variants = {
-        primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm shadow-blue-200',
-        secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200',
-        outline: 'border border-gray-200 bg-transparent hover:bg-gray-50 text-gray-700',
+        primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-white/10 bg-white/5 hover:bg-white/10 hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: 'bg-transparent hover:bg-gray-100 text-gray-600',
     };
 

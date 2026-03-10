@@ -10,7 +10,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ children, pageTitle = "Dashboard" }: MainLayoutProps) {
     return (
-        <div className="min-h-screen bg-gray-50/50 flex">
+        <div className="min-h-screen bg-transparent flex">
             <Sidebar />
             <div className="flex-1 ml-64 flex flex-col">
                 <Navbar title={pageTitle} />

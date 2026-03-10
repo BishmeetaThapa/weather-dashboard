@@ -10,7 +10,8 @@ import {
     Thermometer,
     MapPin,
     Settings,
-    Cloud
+    Radar,
+    Shield
 } from "lucide-react";
 
 const menuItems = [
@@ -29,13 +30,13 @@ export function Sidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="w-64 border-r border-gray-100 bg-white h-screen flex flex-col fixed left-0 top-0 z-40">
+        <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-xl h-screen flex flex-col fixed left-0 top-0 z-40">
             <div className="p-6">
                 <div className="flex items-center gap-3 px-2">
-                    <div className="bg-blue-600 p-1.5 rounded-lg">
-                        <Cloud className="text-white w-5 h-5" />
+                    <div className="bg-primary p-1.5 rounded-lg shadow-lg shadow-primary/20">
+                        <Radar className="text-primary-foreground w-5 h-5" />
                     </div>
-                    <span className="font-bold text-lg tracking-tight text-gray-900">SkyCast</span>
+                    <span className="font-bold text-xl tracking-tight text-foreground">Skycast</span>
                 </div>
             </div>
 
@@ -47,13 +48,13 @@ export function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+                                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                                 isActive
-                                    ? "bg-blue-50 text-blue-600"
-                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                    ? "bg-primary/15 text-primary shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
+                                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                             )}
                         >
-                            <item.icon className={cn("w-5 h-5", isActive ? "text-blue-600" : "text-gray-400")} />
+                            <item.icon className={cn("w-5 h-5", isActive ? "text-primary" : "text-muted-foreground")} />
                             {item.label}
                         </Link>
                     );
@@ -65,9 +66,9 @@ export function Sidebar() {
                     <Link
                         key={item.href}
                         href={item.href}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all duration-200"
                     >
-                        <item.icon className="w-5 h-5 text-gray-400" />
+                        <item.icon className="w-5 h-5 text-muted-foreground" />
                         {item.label}
                     </Link>
                 ))}
