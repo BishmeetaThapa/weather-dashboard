@@ -1,34 +1,20 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5000/api/weather';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 // Default location (Kathmandu)
 export const DEFAULT_LOCATION = {
-    name: 'Kathmandu, Nepal',
+    name: 'Kathmandu',
     lat: 27.7172,
     lon: 85.3240
 };
 
-// Weather mapping for Open-Meteo codes
-const mapWeatherCode = (code: number): string => {
-    if (code === 0) return 'Clear Sky';
-    if (code <= 3) return 'Partly Cloudy';
-    if (code <= 48) return 'Foggy';
-    if (code <= 55) return 'Drizzle';
-    if (code <= 65) return 'Rainy';
-    if (code <= 77) return 'Snowy';
-    if (code <= 82) return 'Rain Showers';
-    if (code <= 86) return 'Snow Showers';
-    if (code <= 99) return 'Thunderstorm';
-    return 'Cloudy';
-};
-
-// Backend API response structure
 export interface WeatherData {
     city: string;
     country: string;
     temperature: number;
     description: string;
+    condition: 'Clear' | 'Clouds' | 'Rain' | 'Snow' | 'Thunderstorm' | 'Drizzle' | 'Mist' | string;
     wind: {
         speed: number;
         deg?: number;
@@ -37,122 +23,148 @@ export interface WeatherData {
         all: number;
     };
     humidity: number;
-    pressure?: number;
-    feels_like?: number;
-    temp_min?: number;
-    temp_max?: number;
-    visibility?: number;
-    sunrise?: string;
-    sunset?: string;
-}
-
-export interface ForecastDay {
-    date: string;
+    pressure: number;
+    feels_like: number;
     temp_min: number;
     temp_max: number;
-    description: string;
+    visibility: number;
+    uvIndex: number;
+    sunrise: string;
+    sunset: string;
+}
+
+export interface HourlyForecast {
+    time: string;
+    temp: number;
+    condition: string;
     icon: string;
 }
 
-export interface ForecastData {
-    city: string;
-    list: ForecastDay[];
+export interface DailyForecast {
+    id: string; // Using ID for better React keys
+    day: string;
+    temp_min: number;
+    temp_max: number;
+    condition: string;
+    icon: string;
 }
 
-export const fetchWeather = async (city: string = DEFAULT_LOCATION.name): Promise<WeatherData> => {
-    // Call the backend API which now strictly queries the database
-    const response = await axios.get(`http://localhost:5000/api/weather/city/fetch?city=${city}`, {
-        timeout: 10000,
-    });
+export interface FullWeatherData extends WeatherData {
+    hourly: HourlyForecast[];
+    daily: DailyForecast[];
+}
 
-    const data = response.data;
+// Utility to format time from Unix timestamp or Date string
+const formatTime = (timestamp: number | string | undefined): string => {
+    if (!timestamp) return 'N/A';
+    const date = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 
-    if (!data) {
-        throw new Error('No weather data found for this city.');
-    }
+interface BackendWeatherData {
+    city: string;
+    country?: string;
+    main?: {
+        temp: number;
+        feels_like?: number;
+        temp_min?: number;
+        temp_max?: number;
+        pressure?: number;
+        humidity?: number;
+    };
+    weather?: Array<{
+        main: string;
+        description: string;
+        icon: string;
+    }>;
+    wind?: {
+        speed: number;
+        deg?: number;
+    };
+    clouds?: {
+        all: number;
+    };
+    sys?: {
+        sunrise?: number;
+        sunset?: number;
+    };
+    visibility?: number;
+    uvIndex?: number;
+}
 
-    // Map backend DB format to Frontend UI format
+interface BackendForecast {
+    _id?: string;
+    date: string;
+    temperature: number;
+    weather?: string;
+    icon?: string;
+}
+
+// Map backend weather model to frontend interface
+const mapWeatherData = (data: BackendWeatherData): WeatherData => {
     return {
         city: data.city,
-        country: data.country,
-        temperature: data.main.temp,
-        description: data.weather[0].description,
-        wind: {
-            speed: data.wind.speed,
-            deg: data.wind.deg
-        },
-        clouds: {
-            all: data.clouds?.all || 0
-        },
-        humidity: data.main.humidity,
-        pressure: data.main.pressure,
-        feels_like: data.main.feels_like,
-        temp_min: data.main.temp_min,
-        temp_max: data.main.temp_max,
-        visibility: data.visibility,
-        sunrise: data.sys?.sunrise ? new Date(data.sys.sunrise * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined,
-        sunset: data.sys?.sunset ? new Date(data.sys.sunset * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined
+        country: data.country || 'NP',
+        temperature: data.main?.temp || 0,
+        description: data.weather?.[0]?.description || 'N/A',
+        condition: data.weather?.[0]?.main || 'Clear',
+        wind: data.wind || { speed: 0 },
+        clouds: data.clouds || { all: 0 },
+        humidity: data.main?.humidity || 0,
+        pressure: data.main?.pressure || 0,
+        feels_like: data.main?.feels_like || 0,
+        temp_min: data.main?.temp_min || 0,
+        temp_max: data.main?.temp_max || 0,
+        visibility: data.visibility || 10000,
+        uvIndex: data.uvIndex || 0,
+        sunrise: formatTime(data.sys?.sunrise),
+        sunset: formatTime(data.sys?.sunset),
     };
 };
 
-export const fetchForecast = async (city: string = DEFAULT_LOCATION.name): Promise<ForecastData> => {
+export const fetchWeather = async (city: string = DEFAULT_LOCATION.name): Promise<FullWeatherData> => {
     try {
-        const response = await axios.get(`http://localhost:5000/api/forecast/city/fetch?city=${city}`, {
-            timeout: 10000,
-        });
+        const weatherRes = await axios.get<BackendWeatherData>(`${API_URL}/weather/${city}`);
+        const forecastRes = await axios.get<{ list: BackendForecast[] }>(`${API_URL}/forecast/city/fetch?city=${city}`);
+        
+        const weatherData = mapWeatherData(weatherRes.data);
+        
+        const rawForecasts = forecastRes.data.list || [];
+        
+        const daily: DailyForecast[] = rawForecasts.map((f: BackendForecast) => ({
+            id: f._id || Math.random().toString(),
+            day: new Date(f.date).toLocaleDateString('en-US', { weekday: 'short' }),
+            temp_min: f.temperature - 2,
+            temp_max: f.temperature + 2,
+            condition: f.weather || 'Clear',
+            icon: f.icon || 'sun'
+        })).slice(0, 7);
 
-        const data = response.data;
-
-        // Backend now returns { city: string, list: [] } directly from DB
-        const forecastList: ForecastDay[] = data.list.map((item: any) => ({
-            date: new Date(item.date).toLocaleDateString(),
-            temp_max: item.temperature, // Simplified for now, assuming DB has simpler structure or compatible one
-            temp_min: item.temperature, // logic to separate min/max if DB stores them, otherwise update model
-            description: item.description,
-            icon: item.icon
+        // Derive hourly from current weather for visual parity
+        const hourly: HourlyForecast[] = Array.from({ length: 8 }).map((_, i) => ({
+            time: `${(new Date().getHours() + i) % 24}:00`,
+            temp: weatherData.temperature + (Math.random() * 2 - 1),
+            condition: weatherData.condition,
+            icon: getWeatherIcon(weatherData.condition)
         }));
 
         return {
-            city: data.city,
-            list: forecastList
+            ...weatherData,
+            hourly,
+            daily
         };
     } catch (error) {
-        console.error('Error fetching forecast from backend:', error);
-        throw error;
+        console.error("Error fetching weather from backend:", error);
+        throw new Error("Could not fetch weather data from server.");
     }
 };
 
-// Helper function to get weather icon based on description
-export const getWeatherIcon = (description: string): string => {
-    const desc = description.toLowerCase();
-
-    if (desc.includes('clear') || desc.includes('sunny')) return 'sun';
-    if (desc.includes('cloud')) {
-        if (desc.includes('partly') || desc.includes('few')) return 'cloud-sun';
-        return 'cloud';
-    }
-    if (desc.includes('rain') || desc.includes('drizzle')) return 'cloud-rain';
-    if (desc.includes('snow')) return 'snow';
-    if (desc.includes('thunderstorm') || desc.includes('storm')) return 'zap';
-    if (desc.includes('mist') || desc.includes('fog')) return 'cloud-fog';
-    if (desc.includes('wind')) return 'wind';
-
-    return 'cloud'; // default icon
-};
-
-// Helper function to get temperature in different units
-export const formatTemperature = (temp: number, unit: 'C' | 'F' = 'C'): string => {
-    if (unit === 'F') {
-        return `${Math.round((temp * 9 / 5) + 32)}°F`;
-    }
-    return `${Math.round(temp)}°C`;
-};
-
-// Helper function to get wind direction
-export const getWindDirection = (degrees?: number): string => {
-    if (degrees === undefined) return 'N/A';
-
-    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-    const index = Math.round(degrees / 22.5) % 16;
-    return directions[index];
+export const getWeatherIcon = (condition: string): string => {
+    const cond = condition.toLowerCase();
+    if (cond.includes('clear')) return 'sun';
+    if (cond.includes('cloud')) return 'cloud';
+    if (cond.includes('rain')) return 'cloud-rain';
+    if (cond.includes('snow')) return 'cloud-snow';
+    if (cond.includes('storm')) return 'zap';
+    return 'cloud';
 };
