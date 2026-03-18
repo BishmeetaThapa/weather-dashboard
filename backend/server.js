@@ -5,6 +5,7 @@ import connect from "./db/connect.js";
 import weatherRouter from "./routes/weather.js";
 import locationRouter from "./routes/location.js";
 import forecastRouter from "./routes/forecast.js";
+import hourlyForecastRouter from "./routes/hourlyForecast.js";
 import authRouter from "./routes/auth.js";
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use("/api/weather", weatherRouter);
 app.use("/api/locations", locationRouter);
 app.use("/api/forecast", forecastRouter);
+app.use("/api/hourly-forecast", hourlyForecastRouter);
 app.use("/api/auth", authRouter);
 
 

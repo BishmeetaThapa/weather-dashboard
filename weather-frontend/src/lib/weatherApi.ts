@@ -34,6 +34,7 @@ export interface WeatherData {
 }
 
 export interface HourlyForecast {
+    id: string;
     time: string;
     temp: number;
     condition: string;
@@ -92,6 +93,21 @@ interface BackendWeatherData {
     uvIndex?: number;
 }
 
+interface BackendHourlyForecast {
+    _id?: string;
+    city: string;
+    date: string;
+    hour: number;
+    temperature: number;
+    feels_like?: number;
+    condition: string;
+    description?: string;
+    icon?: string;
+    humidity?: number;
+    wind_speed?: number;
+    clouds?: number;
+}
+
 interface BackendForecast {
     _id?: string;
     date: string;
@@ -99,6 +115,19 @@ interface BackendForecast {
     weather?: string;
     icon?: string;
 }
+
+// Map backend hourly forecast to frontend interface
+const mapHourlyForecast = (data: BackendHourlyForecast, index: number): HourlyForecast => {
+    const date = new Date(data.date);
+    date.setHours(data.hour);
+    return {
+        id: `${data.city}-${data.date}-${data.hour}-${index}`,
+        time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        temp: data.temperature,
+        condition: data.condition,
+        icon: getWeatherIcon(data.condition)
+    };
+};
 
 // Map backend weather model to frontend interface
 const mapWeatherData = (data: BackendWeatherData): WeatherData => {
@@ -126,11 +155,11 @@ export const fetchWeather = async (city: string = DEFAULT_LOCATION.name): Promis
     try {
         const weatherRes = await axios.get<BackendWeatherData>(`${API_URL}/weather/${city}`);
         const forecastRes = await axios.get<{ list: BackendForecast[] }>(`${API_URL}/forecast/city/fetch?city=${city}`);
-        
+
         const weatherData = mapWeatherData(weatherRes.data);
-        
+
         const rawForecasts = forecastRes.data.list || [];
-        
+
         const daily: DailyForecast[] = rawForecasts.map((f: BackendForecast) => ({
             id: f._id || Math.random().toString(),
             day: new Date(f.date).toLocaleDateString('en-US', { weekday: 'short' }),
@@ -140,13 +169,16 @@ export const fetchWeather = async (city: string = DEFAULT_LOCATION.name): Promis
             icon: f.icon || 'sun'
         })).slice(0, 7);
 
-        // Derive hourly from current weather for visual parity
-        const hourly: HourlyForecast[] = Array.from({ length: 8 }).map((_, i) => ({
-            time: `${(new Date().getHours() + i) % 24}:00`,
-            temp: weatherData.temperature + (Math.random() * 2 - 1),
-            condition: weatherData.condition,
-            icon: getWeatherIcon(weatherData.condition)
-        }));
+        // Get real hourly data from backend
+        let hourly: HourlyForecast[] = [];
+        try {
+            const hourlyRes = await axios.get<{ list: BackendHourlyForecast[] }>(`${API_URL}/hourly-forecast/city?city=${city}`);
+            if (hourlyRes.data.list && hourlyRes.data.list.length > 0) {
+                hourly = hourlyRes.data.list.slice(0, 24).map((item, index) => mapHourlyForecast(item, index));
+            }
+        } catch (hourlyError) {
+            console.error("Error fetching hourly data:", hourlyError instanceof Error ? hourlyError.message : "Unknown error");
+        }
 
         return {
             ...weatherData,

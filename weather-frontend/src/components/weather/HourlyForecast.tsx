@@ -26,8 +26,8 @@ const HourlyForecast: React.FC<HourlyForecastProps> = ({ hourly }) => {
       <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider mb-6 ml-2">Hourly Forecast</h3>
       <div className="flex overflow-x-auto pb-4 gap-6 scrollbar-hide snap-x">
         {hourly.map((hour) => (
-          <div 
-            key={hour.time} 
+          <div
+            key={hour.id}
             className="flex flex-col items-center min-w-[80px] snap-center group"
           >
             <span className="text-sm font-medium text-white/70 mb-4 group-hover:text-white transition-colors">

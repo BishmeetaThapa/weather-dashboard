@@ -3,15 +3,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/Card";
-import { weatherService, locationService, forecastService, Location } from "@/lib/apiClient";
-import WeatherBackground from "@/components/weather/WeatherBackground";
-import { 
-  Shield, 
-  Search, 
-  Edit3, 
-  Trash2, 
-  Plus, 
-  Check, 
+import { weatherService, locationService, hourlyForecastService, Location } from "@/lib/apiClient";
+import {
+  Shield,
+  Search,
+  Edit3,
+  Trash2,
+  Plus,
+  Check,
   X,
   RefreshCw,
   AlertCircle,
@@ -20,18 +19,20 @@ import {
   CloudRain,
   Activity,
   Wind,
-  Droplets
+  Droplets,
+  LogOut,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-type TabType = 'infrastructure' | 'locations' | 'forecasts';
+type TabType = 'infrastructure' | 'locations' | 'hourly';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>('infrastructure');
   const [weatherList, setWeatherList] = useState<any[]>([]);
   const [locationsList, setLocationsList] = useState<Location[]>([]);
-  const [forecastsList, setForecastsList] = useState<any[]>([]);
+  const [hourlyForecastsList, setHourlyForecastsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -39,16 +40,32 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isNewNodeModalOpen, setIsNewNodeModalOpen] = useState(false);
-  
+
   const [newNodeForm, setNewNodeForm] = useState({
     city: "",
     country: "",
     temperature: "20",
+    feels_like: "18",
+    humidity: "45",
+    wind_speed: "10",
+    pressure: "1012",
     condition: "Clear",
     description: "Clear Sky",
+    icon: "01d",
     lat: "27.7",
     lon: "85.3"
   });
+
+  const weatherOptions = [
+    { value: "Clear", label: "Clear Sky", icon: "01d" },
+    { value: "Clouds", label: "Cloudy", icon: "04d" },
+    { value: "Rain", label: "Rainy", icon: "10d" },
+    { value: "Drizzle", label: "Drizzle", icon: "09d" },
+    { value: "Thunderstorm", label: "Thunderstorm", icon: "11d" },
+    { value: "Snow", label: "Snow", icon: "13d" },
+    { value: "Mist", label: "Mist", icon: "50d" },
+    { value: "Fog", label: "Fog", icon: "50d" },
+  ];
 
   const router = useRouter();
 
@@ -63,14 +80,14 @@ export default function AdminPage() {
     try {
       setLoading(true);
       setError(null);
-      const [weather, locations, forecasts] = await Promise.all([
+      const [weather, locations, hourlyForecasts] = await Promise.all([
         weatherService.getWeatherData(),
         locationService.getLocations(),
-        forecastService.getForecasts()
+        hourlyForecastService.getHourlyForecasts()
       ]);
       setWeatherList(weather);
       setLocationsList(locations);
-      setForecastsList(forecasts);
+      setHourlyForecastsList(hourlyForecasts);
     } catch (err: any) {
       console.error("Failed to load admin data:", err);
       setError("Failed to sync with data server.");
@@ -90,8 +107,8 @@ export default function AdminPage() {
     try {
       if (type === 'infrastructure') await weatherService.deleteWeatherData(id);
       if (type === 'locations') await locationService.deleteLocation(id);
-      if (type === 'forecasts') await forecastService.deleteForecast(id);
-      
+      if (type === 'hourly') await hourlyForecastService.deleteHourlyForecast(id);
+
       loadData();
     } catch (err) {
       setError(`Failed to terminate ${type} node.`);
@@ -113,12 +130,6 @@ export default function AdminPage() {
         lon: item.lon,
         region: item.region
       });
-    } else if (type === 'forecasts') {
-      setEditForm({
-        temperature: item.temperature,
-        weather: item.weather,
-        description: item.description
-      });
     }
   };
 
@@ -134,10 +145,8 @@ export default function AdminPage() {
         await weatherService.updateWeatherData(id, updated);
       } else if (type === 'locations') {
         await locationService.updateLocation(id, editForm);
-      } else if (type === 'forecasts') {
-        await forecastService.updateForecast(id, editForm);
       }
-      
+
       setEditingId(null);
       loadData();
     } catch (err) {
@@ -150,7 +159,7 @@ export default function AdminPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Cascade creation
       await locationService.addLocation({
         name: newNodeForm.city,
@@ -163,21 +172,21 @@ export default function AdminPage() {
         city: newNodeForm.city,
         country: newNodeForm.country,
         coordinates: { lat: parseFloat(newNodeForm.lat), lon: parseFloat(newNodeForm.lon) },
-        weather: [{ id: 800, main: newNodeForm.condition, description: newNodeForm.description, icon: "01d" }],
-        main: { temp: parseFloat(newNodeForm.temperature), feels_like: parseFloat(newNodeForm.temperature) + 2, temp_min: 15, temp_max: 25, pressure: 1012, humidity: 45 },
-        wind: { speed: 5, deg: 180 },
+        weather: [{ id: 800, main: newNodeForm.condition, description: newNodeForm.description, icon: newNodeForm.icon }],
+        main: {
+          temp: parseFloat(newNodeForm.temperature),
+          feels_like: parseFloat(newNodeForm.feels_like),
+          temp_min: parseFloat(newNodeForm.temperature) - 5,
+          temp_max: parseFloat(newNodeForm.temperature) + 5,
+          pressure: parseFloat(newNodeForm.pressure),
+          humidity: parseFloat(newNodeForm.humidity)
+        },
+        wind: { speed: parseFloat(newNodeForm.wind_speed), deg: 180 },
         dt: Math.floor(Date.now() / 1000),
         cod: 200
       });
 
-      await forecastService.createForecast({
-        city: newNodeForm.city,
-        date: new Date(),
-        temperature: parseFloat(newNodeForm.temperature),
-        weather: newNodeForm.condition,
-        description: newNodeForm.description,
-        icon: "sun"
-      });
+      // Note: Hourly forecast data is automatically fetched from OpenWeatherMap by the backend
 
       setIsNewNodeModalOpen(false);
       loadData();
@@ -188,16 +197,21 @@ export default function AdminPage() {
     }
   };
 
-  const filteredItems = {
+  const handleLogout = () => {
+    if (confirm('Are you sure you want to logout?')) {
+      localStorage.removeItem('admin_token');
+      router.push('/admin/login');
+    }
+  };
+
+  const filteredItems: Record<TabType, any[]> = {
     infrastructure: weatherList.filter(w => w.city.toLowerCase().includes(searchQuery.toLowerCase())),
     locations: locationsList.filter(l => l.name.toLowerCase().includes(searchQuery.toLowerCase())),
-    forecasts: forecastsList.filter(f => f.city.toLowerCase().includes(searchQuery.toLowerCase()))
+    hourly: hourlyForecastsList.filter(h => h.city?.toLowerCase().includes(searchQuery.toLowerCase()))
   };
 
   return (
     <MainLayout pageTitle="Admin Dashboard">
-      <WeatherBackground condition="Clear" isNight={false} />
-      
       <div className="relative z-10 space-y-8">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
@@ -209,19 +223,26 @@ export default function AdminPage() {
           </div>
 
           <div className="flex items-center gap-3">
-             <button 
-                onClick={() => setIsNewNodeModalOpen(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-black transition-all shadow-lg shadow-primary/20 uppercase text-[10px] tracking-widest"
-              >
-                <Plus size={18} />
-                Add New Location
-              </button>
-              <button 
-                onClick={loadData}
-                className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all"
-              >
-                <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
-              </button>
+            <button
+              onClick={() => setIsNewNodeModalOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-black transition-all shadow-lg shadow-primary/20 uppercase text-[10px] tracking-widest"
+            >
+              <Plus size={18} />
+              Add New Location
+            </button>
+            <button
+              onClick={loadData}
+              className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all"
+            >
+              <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+            </button>
+            <button
+              onClick={handleLogout}
+              className="p-3 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 rounded-2xl transition-all"
+              title="Logout"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
         </header>
 
@@ -230,14 +251,13 @@ export default function AdminPage() {
           {[
             { id: 'infrastructure', label: 'Real-time (Weather)', icon: Activity },
             { id: 'locations', label: 'Registry (Locations)', icon: MapPin },
-            { id: 'forecasts', label: 'Timeline (Forecasts)', icon: CloudRain }
+            { id: 'hourly', label: 'Hourly Forecasts', icon: Clock }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id as TabType); setEditingId(null); }}
-              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'
-              }`}
+              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'
+                }`}
             >
               <tab.icon size={14} />
               {tab.label}
@@ -246,14 +266,14 @@ export default function AdminPage() {
         </div>
 
         <div className="relative group max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-primary transition-colors" size={18} />
-            <input 
-              type="text"
-              placeholder={`Search ${activeTab}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold text-sm"
-            />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-primary transition-colors" size={18} />
+          <input
+            type="text"
+            placeholder={`Search ${activeTab}...`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold text-sm"
+          />
         </div>
 
         {error && (
@@ -279,19 +299,19 @@ export default function AdminPage() {
                     {/* View/Edit Context Selection based on Tab */}
                     {activeTab === 'infrastructure' && renderInfrastructureItem(item)}
                     {activeTab === 'locations' && renderLocationItem(item)}
-                    {activeTab === 'forecasts' && renderForecastItem(item)}
+                    {activeTab === 'hourly' && renderHourlyItem(item)}
 
                     {/* Generic Action Buttons */}
                     <div className="flex items-center gap-3">
                       {editingId === (item._id || item.id) ? (
                         <>
-                          <button 
+                          <button
                             onClick={() => handleSaveEdit(activeTab, item._id || item.id)}
                             className="p-3 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/20 rounded-xl transition-all"
                           >
                             <Check size={20} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => setEditingId(null)}
                             className="p-3 bg-white/5 text-white/40 hover:bg-white/10 rounded-xl transition-all"
                           >
@@ -300,13 +320,13 @@ export default function AdminPage() {
                         </>
                       ) : (
                         <>
-                          <button 
+                          <button
                             onClick={() => handleEdit(activeTab, item)}
                             className="p-3 bg-white/5 text-white/40 hover:text-white hover:bg-white/10 rounded-xl transition-all"
                           >
                             <Edit3 size={18} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDelete(activeTab, item._id || item.id)}
                             className="p-3 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all"
                           >
@@ -331,7 +351,7 @@ export default function AdminPage() {
       </div>
 
       {/* Node Initialization Modal */}
-      <NewNodeModal 
+      <NewNodeModal
         isOpen={isNewNodeModalOpen}
         onClose={() => setIsNewNodeModalOpen(false)}
         onAdd={handleInitializeNode}
@@ -360,18 +380,18 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 flex-[2]">
           {isEditing ? (
             <>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Temp (°C)</label>
-                  <input type="number" value={editForm.temp} onChange={(e) => setEditForm({...editForm, temp: e.target.value})} className="admin-input" />
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Main</label>
-                  <input type="text" value={editForm.main} onChange={(e) => setEditForm({...editForm, main: e.target.value})} className="admin-input" />
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Desc</label>
-                  <input type="text" value={editForm.description} onChange={(e) => setEditForm({...editForm, description: e.target.value})} className="admin-input" />
-               </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Temp (°C)</label>
+                <input type="number" value={editForm.temp} onChange={(e) => setEditForm({ ...editForm, temp: e.target.value })} className="admin-input" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Main</label>
+                <input type="text" value={editForm.main} onChange={(e) => setEditForm({ ...editForm, main: e.target.value })} className="admin-input" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Desc</label>
+                <input type="text" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="admin-input" />
+              </div>
             </>
           ) : (
             <>
@@ -410,14 +430,14 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 lg:grid-cols-2 gap-8 flex-1">
           {isEditing ? (
             <>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Latitude</label>
-                  <input type="number" value={editForm.lat} onChange={(e) => setEditForm({...editForm, lat: e.target.value})} className="admin-input" />
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Longitude</label>
-                  <input type="number" value={editForm.lon} onChange={(e) => setEditForm({...editForm, lon: e.target.value})} className="admin-input" />
-               </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Latitude</label>
+                <input type="number" value={editForm.lat} onChange={(e) => setEditForm({ ...editForm, lat: e.target.value })} className="admin-input" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Longitude</label>
+                <input type="number" value={editForm.lon} onChange={(e) => setEditForm({ ...editForm, lon: e.target.value })} className="admin-input" />
+              </div>
             </>
           ) : (
             <>
@@ -436,40 +456,50 @@ export default function AdminPage() {
     );
   }
 
-  function renderForecastItem(item: any) {
+  function renderHourlyItem(item: any) {
     const isEditing = editingId === item._id;
+    const hour = item.hour !== undefined ? `${item.hour}:00` : 'N/A';
+    const date = item.date ? new Date(item.date).toLocaleDateString() : 'N/A';
     return (
       <>
         <div className="flex items-center gap-6 flex-1">
           <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-            <CloudRain className="text-sky-400/50" size={24} />
+            <Clock className="text-purple-400/50" size={24} />
           </div>
           <div>
             <h3 className="text-2xl font-black tracking-tight text-white">{item.city}</h3>
-            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">{new Date(item.date).toLocaleDateString()}</p>
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">{date} at {hour}</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 flex-[2]">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 flex-[2]">
           {isEditing ? (
             <>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Temp</label>
-                  <input type="number" value={editForm.temperature} onChange={(e) => setEditForm({...editForm, temperature: e.target.value})} className="admin-input" />
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Weather</label>
-                  <input type="text" value={editForm.weather} onChange={(e) => setEditForm({...editForm, weather: e.target.value})} className="admin-input" />
-               </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Temp</label>
+                <input type="number" value={editForm.temperature} onChange={(e) => setEditForm({ ...editForm, temperature: e.target.value })} className="admin-input" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Condition</label>
+                <input type="text" value={editForm.condition} onChange={(e) => setEditForm({ ...editForm, condition: e.target.value })} className="admin-input" />
+              </div>
             </>
           ) : (
             <>
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Prediction</p>
+                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Temperature</p>
                 <p className="text-2xl font-black text-white">{Math.round(item.temperature)}°C</p>
               </div>
               <div className="space-y-1">
+                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Feels Like</p>
+                <p className="text-xl font-bold text-white/60">{Math.round(item.feels_like)}°C</p>
+              </div>
+              <div className="space-y-1">
                 <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Condition</p>
-                <p className="text-sm font-bold text-sky-400">{item.weather}</p>
+                <p className="text-sm font-bold text-purple-400">{item.condition}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Humidity</p>
+                <p className="text-sm font-bold text-white/60">{item.humidity}%</p>
               </div>
             </>
           )}
@@ -480,11 +510,22 @@ export default function AdminPage() {
 }
 
 function NewNodeModal({ isOpen, onClose, onAdd, form, setForm, loading }: any) {
+  const weatherOptions = [
+    { value: "Clear", label: "Clear Sky", icon: "01d" },
+    { value: "Clouds", label: "Cloudy", icon: "04d" },
+    { value: "Rain", label: "Rainy", icon: "10d" },
+    { value: "Drizzle", label: "Drizzle", icon: "09d" },
+    { value: "Thunderstorm", label: "Thunderstorm", icon: "11d" },
+    { value: "Snow", label: "Snow", icon: "13d" },
+    { value: "Mist", label: "Mist", icon: "50d" },
+    { value: "Fog", label: "Fog", icon: "50d" },
+  ];
+
   return (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -501,36 +542,58 @@ function NewNodeModal({ isOpen, onClose, onAdd, form, setForm, loading }: any) {
             </header>
 
             <form onSubmit={onAdd} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Location Name</label>
-                  <input type="text" required value={form.city} onChange={(e) => setForm({...form, city: e.target.value})} placeholder="City Name" className="admin-input" />
+                  <input type="text" required value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="City Name" className="admin-input" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Region/Country</label>
-                  <input type="text" required value={form.country} onChange={(e) => setForm({...form, country: e.target.value})} placeholder="State/ISO" className="admin-input" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Current Temp (°C)</label>
-                  <input type="number" required value={form.temperature} onChange={(e) => setForm({...form, temperature: e.target.value})} className="admin-input" />
+                  <input type="text" required value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} placeholder="State/ISO" className="admin-input" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Condition</label>
-                  <select value={form.condition} onChange={(e) => setForm({...form, condition: e.target.value})} className="admin-input">
-                    <option value="Clear">Clear</option>
-                    <option value="Clouds">Clouds</option>
-                    <option value="Rain">Rain</option>
-                    <option value="Snow">Snow</option>
-                    <option value="Thunderstorm">Thunderstorm</option>
+                  <select value={form.condition} onChange={(e) => {
+                    const selected = weatherOptions.find(opt => opt.value === e.target.value);
+                    setForm({
+                      ...form,
+                      condition: e.target.value,
+                      description: selected?.label || "Clear Sky",
+                      icon: selected?.icon || "01d"
+                    });
+                  }} className="admin-input">
+                    {weatherOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Current Temp (°C)</label>
+                  <input type="number" required value={form.temperature} onChange={(e) => setForm({ ...form, temperature: e.target.value })} className="admin-input" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Feels Like (°C)</label>
+                  <input type="number" required value={form.feels_like} onChange={(e) => setForm({ ...form, feels_like: e.target.value })} className="admin-input" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Humidity (%)</label>
+                  <input type="number" required value={form.humidity} onChange={(e) => setForm({ ...form, humidity: e.target.value })} className="admin-input" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Wind Speed (km/h)</label>
+                  <input type="number" required value={form.wind_speed} onChange={(e) => setForm({ ...form, wind_speed: e.target.value })} className="admin-input" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Pressure (hPa)</label>
+                  <input type="number" required value={form.pressure} onChange={(e) => setForm({ ...form, pressure: e.target.value })} className="admin-input" />
+                </div>
+                <div className="space-y-2">
                   <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Latitude</label>
-                  <input type="text" required value={form.lat} onChange={(e) => setForm({...form, lat: e.target.value})} className="admin-input" />
+                  <input type="text" required value={form.lat} onChange={(e) => setForm({ ...form, lat: e.target.value })} className="admin-input" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Longitude</label>
-                  <input type="text" required value={form.lon} onChange={(e) => setForm({...form, lon: e.target.value})} className="admin-input" />
+                  <input type="text" required value={form.lon} onChange={(e) => setForm({ ...form, lon: e.target.value })} className="admin-input" />
                 </div>
               </div>
 
@@ -539,7 +602,7 @@ function NewNodeModal({ isOpen, onClose, onAdd, form, setForm, loading }: any) {
                   {loading ? "Saving Details..." : "Save Location"}
                 </button>
                 <button type="button" onClick={onClose} className="flex-1 py-4 bg-white/5 text-white/40 hover:text-white font-black rounded-2xl uppercase tracking-widest text-[10px]">
-                   Cancel
+                  Cancel
                 </button>
               </div>
             </form>

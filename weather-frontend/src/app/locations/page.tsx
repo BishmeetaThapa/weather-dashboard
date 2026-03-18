@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { MapPin, Navigation, Loader2, AlertCircle } from "lucide-react";
-import WeatherBackground from "@/components/weather/WeatherBackground";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -33,24 +32,33 @@ export default function LocationsPage() {
 
     return (
         <MainLayout pageTitle="Global Nodes">
-            <div className="font-sans overflow-x-hidden">
-                <WeatherBackground condition="Clear" isNight={false} />
-                
+            <div className="font-sans overflow-x-hidden bg-gray-900 min-h-screen text-white">
+
                 <main className="max-w-7xl mx-auto px-4 py-12 relative z-10">
+
+                    {/* Header */}
                     <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-                        <motion.div 
+
+                        <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             className="space-y-2"
                         >
-                            <h1 className="text-4xl font-extrabold tracking-tight">Weather Locations</h1>
-                            <p className="text-white/60 font-medium">View tracked cities and regions across your global network.</p>
+                            <h1 className="text-4xl font-extrabold tracking-tight">
+                                Weather Locations
+                            </h1>
+
+                            <p className="text-white/60 font-medium">
+                                View tracked cities and regions across your global network.
+                            </p>
                         </motion.div>
+
                     </header>
 
+                    {/* Error */}
                     <AnimatePresence mode="wait">
                         {error && (
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
@@ -60,7 +68,8 @@ export default function LocationsPage() {
                                     <AlertCircle className="text-red-400" />
                                     <p className="text-red-400 font-medium">{error}</p>
                                 </div>
-                                <button 
+
+                                <button
                                     onClick={loadLocations}
                                     className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-bold transition-all"
                                 >
@@ -70,30 +79,43 @@ export default function LocationsPage() {
                         )}
                     </AnimatePresence>
 
+                    {/* Loading */}
                     {loading ? (
                         <div className="flex flex-col items-center justify-center h-64 gap-4">
                             <Loader2 className="w-12 h-12 text-sky-400 animate-spin" />
-                            <p className="text-white/40 font-medium tracking-widest uppercase text-xs">Synchronizing Nodes</p>
+                            <p className="text-white/40 font-medium tracking-widest uppercase text-xs">
+                                Synchronizing Nodes
+                            </p>
                         </div>
                     ) : (
-                        <motion.div 
+
+                        <motion.div
                             layout
                             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                         >
+
                             {locations.length === 0 ? (
+
                                 <div className="col-span-full py-32 flex flex-col items-center text-center space-y-6 bg-white/5 backdrop-blur-md rounded-[3rem] border border-white/10 border-dashed">
+
                                     <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center">
                                         <MapPin size={40} className="text-white/20" />
                                     </div>
+
                                     <div className="space-y-2">
-                                        <h3 className="text-2xl font-bold text-white">No locations tracked</h3>
-                                        <p className="text-white/40 italic">Initialize your first data nodes from the administrative control panel.</p>
+                                        <h3 className="text-2xl font-bold">No locations tracked</h3>
+                                        <p className="text-white/40 italic">
+                                            Initialize your first data nodes from the administrative control panel.
+                                        </p>
                                     </div>
+
                                 </div>
+
                             ) : (
+
                                 <AnimatePresence>
                                     {locations.map((node, index) => (
-                                        <motion.div 
+                                        <motion.div
                                             key={node._id}
                                             layout
                                             initial={{ opacity: 0, y: 20 }}
@@ -111,15 +133,19 @@ export default function LocationsPage() {
                                                     <h3 className="text-3xl font-bold tracking-tight">{node.city}</h3>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-4xl font-black text-white group-hover:text-sky-400 transition-colors duration-300">{Math.round(node?.main?.temp ?? 0)}°</p>
-                                                    <p className="text-xs font-semibold text-white/40 uppercase tracking-widest mt-1">{node?.weather?.[0]?.main ?? "N/A"}</p>
+                                                    <p className="text-4xl font-black text-white group-hover:text-sky-400 transition-colors duration-300">
+                                                        {Math.round(node?.main?.temp ?? 0)}°
+                                                    </p>
+                                                    <p className="text-xs font-semibold text-white/40 uppercase tracking-widest mt-1">
+                                                        {node?.weather?.[0]?.main ?? "N/A"}
+                                                    </p>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center justify-between pt-6 border-t border-white/10">
                                                 <div className="flex items-center gap-4">
                                                     <Link href={`/forecast?city=${node.city}`}>
-                                                        <button 
+                                                        <button
                                                             className="p-3 bg-white/5 rounded-2xl hover:bg-sky-500/10 hover:text-sky-400 transition-all text-white/40"
                                                             title="View Detailed Forecast"
                                                         >
@@ -128,18 +154,25 @@ export default function LocationsPage() {
                                                     </Link>
                                                 </div>
                                                 <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/5">
-                                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest italic">{node?.weather?.[0]?.description ?? "No description"}</span>
+                                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest italic">
+                                                        {node?.weather?.[0]?.description ?? "No description"}
+                                                    </span>
                                                 </div>
                                             </div>
+
                                         </motion.div>
                                     ))}
                                 </AnimatePresence>
+
                             )}
+
                         </motion.div>
+
                     )}
+
                 </main>
+
             </div>
         </MainLayout>
     );
 }
-

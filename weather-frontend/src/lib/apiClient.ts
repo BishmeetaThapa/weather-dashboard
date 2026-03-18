@@ -99,15 +99,39 @@ export const forecastService = {
     }
 };
 
+export const hourlyForecastService = {
+    getHourlyForecasts: async (): Promise<any[]> => {
+        const response = await apiClient.get('/hourly-forecast');
+        return response.data;
+    },
+
+    getHourlyForecastByCity: async (city: string): Promise<any[]> => {
+        const response = await apiClient.get(`/hourly-forecast/city?city=${city}`);
+        return response.data.list || [];
+    },
+
+    createHourlyForecast: async (data: any): Promise<void> => {
+        await apiClient.post('/hourly-forecast', data);
+    },
+
+    updateHourlyForecast: async (id: string, data: any): Promise<void> => {
+        await apiClient.put(`/hourly-forecast/${id}`, data);
+    },
+
+    deleteHourlyForecast: async (id: string): Promise<void> => {
+        await apiClient.delete(`/hourly-forecast/${id}`);
+    }
+};
+
 export const authService = {
     login: async (password: string): Promise<{ success: boolean; token?: string; message?: string }> => {
         try {
             const response = await apiClient.post('/auth/login', { password });
             return response.data;
         } catch (error: any) {
-            return { 
-                success: false, 
-                message: error.response?.data?.message || "Authentication Failed" 
+            return {
+                success: false,
+                message: error.response?.data?.message || "Authentication Failed"
             };
         }
     }

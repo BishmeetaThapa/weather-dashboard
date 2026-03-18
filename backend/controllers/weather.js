@@ -1,14 +1,36 @@
 import Weather from "../models/Weather.js";
+import { fetchAndSaveHourlyForecast } from "../services/weatherService.js";
 
 
 // Default coordinates for Kathmandu
 const DEFAULT_LAT = 27.7172;
 const DEFAULT_LON = 85.3240;
 
-// CREATE new weather
+// CREATE new weather and automatically fetch hourly forecast
 const createWeather = async (req, res) => {
-  await Weather.create(req.body);
-  res.send("Weather data created successfully!");
+  try {
+    // Create weather data
+    const weather = await Weather.create(req.body);
+
+    // Get city name from the created weather data
+    const city = req.body.city || (req.body.location && req.body.location.city);
+
+    if (city) {
+      // Automatically fetch and save hourly forecast from OpenWeatherMap
+      try {
+        await fetchAndSaveHourlyForecast(city, 24);
+        console.log(`Hourly forecast automatically created for ${city}`);
+      } catch (hourlyError) {
+        console.error(`Failed to fetch hourly forecast for ${city}:`, hourlyError.message);
+        // Don't fail the request if hourly forecast fails
+      }
+    }
+
+    res.send("Weather data created successfully!");
+  } catch (error) {
+    console.error("Error creating weather:", error);
+    res.status(500).send("Error creating weather data");
+  }
 };
 
 // Helper function to calculate distance using Haversine formula
@@ -33,7 +55,7 @@ const getWeather = async (req, res) => {
     if (lat && lon && data.length > 0) {
       const userLat = parseFloat(lat);
       const userLon = parseFloat(lon);
-      
+
       // Calculate distance for each node and sort
       data = data.map(node => {
         const distance = calculateDistance(userLat, userLon, node.coordinates.lat, node.coordinates.lon);

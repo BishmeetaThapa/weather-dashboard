@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from require('axios');
 
 const weatherData = {
     city: "Kathmandu",

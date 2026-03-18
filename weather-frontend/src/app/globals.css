@@ -4,22 +4,22 @@
   /* Premium Palette - Deep Indigo & Vibrant Teal */
   --background: #0f172a;
   --foreground: #f8fafc;
-  
+
   --card: #1e293b;
   --card-foreground: #f1f5f9;
-  
+
   --primary: #38bdf8;
   --primary-foreground: #0f172a;
-  
+
   --secondary: #818cf8;
   --secondary-foreground: #f8fafc;
-  
+
   --accent: #2dd4bf;
   --accent-foreground: #0f172a;
-  
+
   --muted: #334155;
   --muted-foreground: #94a3b8;
-  
+
   --border: #334155;
   --ring: #38bdf8;
 
@@ -45,7 +45,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
   --color-ring: var(--ring);
-  
+
   --font-sans: 'Inter', var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono);
 }
@@ -83,4 +83,34 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* Admin Input Styles */
+.admin-input {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+}
+
+.admin-input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+/* Make select dropdown options visible */
+.admin-input option {
+  background: #1e293b;
+  color: #f8fafc;
 }
