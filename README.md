@@ -26,8 +26,6 @@ A production-ready weather forecasting application designed for professional mon
 
 ### Advanced Weather Features
 - **Auto-Refresh** - Real-time weather updates every 2 minutes with toggle control
-- **GPS Location Tracking** - Use your current location for weather data
-- **Location Indicator** - Shows when using your current location
 - **Last Updated Timestamps** - Know exactly when data was last fetched
 - **Temperature Statistics** - Interactive charts and analytics
 - **Weather Details** - Detailed breakdown of all weather metrics
