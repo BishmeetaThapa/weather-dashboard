@@ -12,7 +12,7 @@ import { WeatherSidebarCards } from "@/components/weather/WeatherSidebarCards";
 import { LocationCard } from "@/components/weather/LocationCard";
 import { DashboardEmptyState } from "@/components/weather/DashboardEmptyState";
 
-const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
 
 export default function DashboardPage() {
   const [weatherList, setWeatherList] = useState<any[]>([]);

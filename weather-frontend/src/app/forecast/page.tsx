@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 
-const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
 
 export default function ForecastPage() {
   const [weather, setWeather] = useState<FullWeatherData | null>(null);
@@ -118,10 +118,10 @@ export default function ForecastPage() {
               <button
                 onClick={toggleAutoRefresh}
                 className={`p-2 rounded-xl transition-all ${autoRefresh
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "bg-white/10 text-white/40"
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "bg-white/10 text-white/40"
                   }`}
-                title={autoRefresh ? "Auto-refresh ON (5 min)" : "Auto-refresh OFF"}
+                title={autoRefresh ? "Auto-refresh ON (2 min)" : "Auto-refresh OFF"}
               >
                 <RefreshCw size={16} className={autoRefresh ? "animate-pulse" : ""} />
               </button>

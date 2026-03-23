@@ -11,7 +11,7 @@ import WeatherBackground from "@/components/weather/WeatherBackground";
 import { AlertCircle, RefreshCw, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
 
 export default function CurrentWeatherPage() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -101,10 +101,10 @@ export default function CurrentWeatherPage() {
           <button
             onClick={toggleAutoRefresh}
             className={`p-2 rounded-xl transition-all ${autoRefresh
-                ? "bg-emerald-500/20 text-emerald-400"
-                : "bg-white/10 text-white/40"
+              ? "bg-emerald-500/20 text-emerald-400"
+              : "bg-white/10 text-white/40"
               }`}
-            title={autoRefresh ? "Auto-refresh ON (5 min)" : "Auto-refresh OFF"}
+            title={autoRefresh ? "Auto-refresh ON (2 min)" : "Auto-refresh OFF"}
           >
             <RefreshCw size={16} className={autoRefresh ? "animate-pulse" : ""} />
           </button>

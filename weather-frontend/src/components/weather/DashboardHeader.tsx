@@ -47,10 +47,10 @@ export function DashboardHeader({
                     <button
                         onClick={onToggleAutoRefresh}
                         className={`p-3 border rounded-2xl transition-all ${autoRefresh
-                                ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
-                                : "bg-white/10 border-white/20 text-white/40"
+                            ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+                            : "bg-white/10 border-white/20 text-white/40"
                             }`}
-                        title={autoRefresh ? "Auto-refresh ON (5 min)" : "Auto-refresh OFF"}
+                        title={autoRefresh ? "Auto-refresh ON (2 min)" : "Auto-refresh OFF"}
                     >
                         <RefreshCw size={18} className={autoRefresh ? "animate-pulse" : ""} />
                     </button>

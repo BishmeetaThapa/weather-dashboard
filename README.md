@@ -25,7 +25,7 @@ A production-ready weather forecasting application designed for professional mon
 ## 🔹 Level 2: Enhanced Management (Growth)
 
 ### Advanced Weather Features
-- **Auto-Refresh** - Real-time weather updates every 5 minutes with toggle control
+- **Auto-Refresh** - Real-time weather updates every 2 minutes with toggle control
 - **Last Updated Timestamps** - Know exactly when data was last fetched
 - **Temperature Statistics** - Interactive charts and analytics
 - **Weather Details** - Detailed breakdown of all weather metrics
