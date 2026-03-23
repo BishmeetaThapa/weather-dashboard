@@ -1,96 +1,101 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/lucide-react/lucide/main/icons/cloud-sun.svg" width="80" height="80" alt="SkyCast Logo" />
-  <h1>Real-Time Weather Dashboard</h1>
-  <p>A modern, high-performance SaaS weather dashboard focused on the Nepal region, built with Next.js 15 and Node.js backend with MongoDB integration.</p>
+# ☁️ Real-Time Weather Dashboard
 
-  <div>
-    <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js" />
-    <img src="https://img.shields.io/badge/Node.js-Express-green?style=for-the-badge&logo=node.js" alt="Node.js" />
-    <img src="https://img.shields.io/badge/Tailwind-v4-blue?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS" />
-    <img src="https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb" alt="MongoDB" />
-  </div>
-</div>
+A production-ready weather forecasting application designed for professional monitoring and personal use. Built with **Next.js 15, Node.js/Express, and MongoDB**, it delivers accurate, real-time weather metrics for Kathmandu and major cities in Nepal.
 
 ---
 
-## 🚀 Overview
+## 🌟 Key Features
 
-**Weather Dashboard** is a production-ready weather forecasting application designed for professional monitoring and personal use. It delivers accurate, real-time weather metrics for **Kathmandu and major cities in Nepal**, with a full-stack backend for data management.
+### Weather Monitoring
+- **Real-Time Dashboard** - Live weather updates with auto-refresh every 5 minutes
+- **7-Day Forecast** - Comprehensive weekly weather predictions
+- **Hourly Forecasts** - 24-48 hour detailed hourly breakdowns
+- **Current Weather** - Temperature, humidity, wind speed, pressure, and more
+- **Temperature Statistics** - Interactive charts and analytics
+- **Location Management** - Save, edit, and manage multiple locations
 
-### 🌟 Key Features
+### Admin & Management
+- **Admin Dashboard** - Full control over weather data management
+- **CRUD Operations** - Create, read, update, delete for all data types
+- **Hourly Data Management** - Manage hourly forecast entries via UI
+- **Location CRUD** - Add/edit/delete tracked locations
 
-<table width="100%">
-  <tr>
-    <td width="50%">
-      <b>📡 Real-Time Monitoring</b><br/>
-      Live weather polling every 5 minutes with auto-refresh toggle.
-    </td>
-    <td width="50%">
-      <b>📊 Analytical Charts</b><br/>
-      Interactive temperature trend charts powered by Chart.js.
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <b>🌐 Full-Stack Backend</b><br/>
-      Node.js/Express REST API with MongoDB for data persistence.
-    </td>
-    <td>
-      <b>🛠️ Admin Dashboard</b><br/>
-      Manage weather data, locations, forecasts, and hourly data.
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <b>📅 7-Day Forecast</b><br/>
-      Detailed weekly breakdown with modern icons and precision metrics.
-    </td>
-    <td>
-      <b>💧 Hourly Forecasts</b><br/>
-      Hourly weather predictions for the next 24-48 hours.
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <b>🇳🇵 Nepal Regional Focus</b><br/>
-      Pre-configured tracking for Kathmandu, Pokhara, and other major hubs.
-    </td>
-    <td>
-      <b>📍 Location Management</b><br/>
-      Full CRUD operations for saved locations with persistent backend.
-    </td>
-  </tr>
-</table>
+### Technical Highlights
+- **GPS Location Detection** - Automatic weather based on your position
+- **Responsive Design** - Works seamlessly on mobile, tablet, and desktop
+- **Glassmorphism UI** - Modern, beautiful interface with animations
+- **MongoDB Persistence** - All data stored persistently
 
 ---
 
-## 🛠️ Technical Stack
+## 📂 Project Structure
 
-### Frontend
-- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
-- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
-- **State & Data**: [Axios](https://axios-http.com/) & React Hooks
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Charts**: [Chart.js](https://www.chartjs.org/) & [React-Chartjs-2](https://react-chartjs-2.js.org/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-
-### Backend
-- **Runtime**: [Node.js](https://nodejs.org/)
-- **Framework**: [Express.js](https://expressjs.com/)
-- **Database**: [MongoDB](https://www.mongodb.com/) with Mongoose ODM
-- **API**: [Open-Meteo](https://open-meteo.com/) (Free Weather API)
+```
+weather-dashboard/
+├── weather-frontend/           # Next.js 15 Frontend
+│   ├── src/
+│   │   ├── app/                # App Router Pages
+│   │   │   ├── admin/          # Admin panel & login
+│   │   │   ├── dashboard/      # Main weather dashboard
+│   │   │   ├── forecast/       # 7-day forecast page
+│   │   │   ├── current-weather/ # Current conditions
+│   │   │   ├── locations/     # Location management
+│   │   │   ├── temperature-stats/ # Analytics & charts
+│   │   │   └── settings/       # App settings
+│   │   ├── components/         # Reusable UI components
+│   │   │   ├── layout/         # Layout components
+│   │   │   ├── ui/             # UI primitives
+│   │   │   └── weather/        # Weather widgets
+│   │   └── lib/                # API clients & utilities
+│   └── package.json
+│
+├── backend/                    # Node.js/Express Backend
+│   ├── controllers/            # Route handlers
+│   ├── models/                 # Mongoose schemas
+│   ├── routes/                 # API routes
+│   ├── services/               # Business logic
+│   ├── middleware/             # Custom middleware
+│   ├── db/                     # Database configuration
+│   └── package.json
+│
+└── README.md                   # Project documentation
+```
 
 ---
 
-## 💻 Getting Started
+## 🛠️ Tech Stack
+
+### Frontend Technologies
+| Technology | Purpose |
+|------------|---------|
+| Next.js 15 | React framework with App Router |
+| React 18 | UI library with hooks |
+| Tailwind CSS v4 | Utility-first styling |
+| TypeScript | Type safety |
+| Framer Motion | Smooth animations |
+| Chart.js | Data visualization |
+| Lucide React | Icon library |
+| Axios | HTTP client |
+
+### Backend Technologies
+| Technology | Purpose |
+|------------|---------|
+| Node.js | JavaScript runtime |
+| Express.js | Web framework |
+| MongoDB | NoSQL database |
+| Mongoose | MongoDB ODM |
+| Open-Meteo API | Weather data source |
+
+---
+
+## ⚙️ Installation
 
 ### Prerequisites
-- Node.js 18.x or higher
-- MongoDB (local or Atlas cloud)
+- Node.js (v18+)
+- MongoDB (local instance or MongoDB Atlas)
 - npm or yarn
 
-### Installation
+### Step-by-Step Setup
 
 1. **Clone the repository**
    ```bash
@@ -98,17 +103,13 @@
    cd weather-dashboard
    ```
 
-2. **Install all dependencies**
+2. **Install Backend Dependencies**
    ```bash
-   # Install frontend dependencies
-   cd weather-frontend && npm install
-   
-   # Install backend dependencies
-   cd ../backend && npm install
+   cd backend
+   npm install
    ```
 
-3. **Set up Environment Variables**
-
+3. **Configure Backend Environment**
    Create a `.env` file in the backend directory:
    ```env
    PORT=5000
@@ -116,122 +117,114 @@
    ADMIN_PASSWORD=admin123
    ```
 
-   Create a `.env.local` file in the weather-frontend directory:
+4. **Start Backend Server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Install Frontend Dependencies**
+   ```bash
+   cd weather-frontend
+   npm install
+   ```
+
+6. **Configure Frontend Environment**
+   Create a `.env.local` file in weather-frontend directory:
    ```env
    NEXT_PUBLIC_API_URL=http://localhost:5000/api
    ```
 
-4. **Start MongoDB**
+7. **Start Frontend Server**
    ```bash
-   # If using local MongoDB
-   mongod
-   ```
-
-5. **Run the development servers**
-
-   Terminal 1 (Backend):
-   ```bash
-   cd backend
    npm run dev
    ```
 
-   Terminal 2 (Frontend):
-   ```bash
-   cd weather-frontend
-   npm run dev
-   ```
-
-6. **Access the application**
+8. **Access the Application**
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:5000/api
 
 ---
 
-## 📁 Project Structure
+## 📡 API Endpoints Reference
 
-```
-weather-dashboard/
-├── weather-frontend/          # Next.js Frontend
-│   ├── src/
-│   │   ├── app/              # Next.js App Router Pages
-│   │   │   ├── admin/        # Admin dashboard & login
-│   │   │   ├── dashboard/    # Main weather dashboard
-│   │   │   ├── forecast/     # 7-day forecast page
-│   │   │   ├── current-weather/  # Current weather
-│   │   │   ├── locations/    # Location management
-│   │   │   └── temperature-stats/ # Temperature analytics
-│   │   ├── components/       # Reusable UI & Weather Widgets
-│   │   └── lib/              # API Clients & Utilities
-│   └── package.json
-│
-├── backend/                   # Node.js/Express Backend
-│   ├── controllers/           # Route handlers
-│   ├── models/               # Mongoose schemas
-│   ├── routes/               # API routes
-│   ├── services/             # Business logic
-│   ├── middleware/           # Custom middleware
-│   ├── db/                   # Database connection
-│   └── package.json
-│
-└── README.md
-```
+### Weather Data
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/weather` | Fetch all weather records |
+| GET | `/api/weather?lat=X&lon=Y` | Weather by coordinates |
+| POST | `/api/weather` | Create new weather entry |
+| PUT | `/api/weather/:id` | Update weather record |
+| DELETE | `/api/weather/:id` | Delete weather record |
 
----
+### Location Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/locations` | Get all saved locations |
+| POST | `/api/locations` | Add new location |
+| PUT | `/api/locations/:id` | Update location details |
+| DELETE | `/api/locations/:id` | Remove location |
 
-## 📱 Pages Overview
-
-| Page | Description |
-|------|-------------|
-| `/dashboard` | Main dashboard with current weather, GPS location, and auto-refresh |
-| `/forecast` | 7-day forecast with hourly breakdown |
-| `/current-weather` | Detailed current weather with admin panel |
-| `/locations` | Manage saved locations |
-| `/temperature-stats` | Temperature analytics and charts |
-| `/admin` | Admin panel for managing all weather data |
-| `/settings` | Application settings |
-
----
-
-## 🔧 API Endpoints
-
-### Weather
-- `GET /api/weather` - Get all weather data
-- `GET /api/weather?lat=X&lon=Y` - Get weather by coordinates
-- `POST /api/weather` - Create weather data
-- `PUT /api/weather/:id` - Update weather data
-- `DELETE /api/weather/:id` - Delete weather data
-
-### Locations
-- `GET /api/locations` - Get all locations
-- `POST /api/locations` - Add new location
-- `PUT /api/locations/:id` - Update location
-- `DELETE /api/locations/:id` - Delete location
-
-### Forecasts
-- `GET /api/forecast` - Get all forecasts
-- `GET /api/forecast/:city` - Get forecast by city
-- `POST /api/forecast` - Create forecast
+### Forecast Data
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/forecast` | Get all forecasts |
+| GET | `/api/forecast/:city` | Get forecast by city name |
+| POST | `/api/forecast` | Create forecast entry |
+| PUT | `/api/forecast/:id` | Update forecast |
+| DELETE | `/api/forecast/:id` | Delete forecast |
 
 ### Hourly Forecasts
-- `GET /api/hourly-forecast` - Get all hourly forecasts
-- `GET /api/hourly-forecast/city?city=NAME` - Get hourly forecast by city
-- `POST /api/hourly-forecast` - Create hourly forecast
-- `PUT /api/hourly-forecast/:id` - Update hourly forecast
-- `DELETE /api/hourly-forecast/:id` - Delete hourly forecast
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/hourly-forecast` | Get all hourly forecasts |
+| GET | `/api/hourly-forecast/city?city=NAME` | Get hourly for specific city |
+| POST | `/api/hourly-forecast` | Create hourly entry |
+| PUT | `/api/hourly-forecast/:id` | Update hourly forecast |
+| DELETE | `/api/hourly-forecast/:id` | Delete hourly forecast |
 
 ### Authentication
-- `POST /api/auth/login` - Admin login (password: admin123)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Admin login endpoint |
 
 ---
 
-## 🔐 Default Credentials
+## 🔐 Access Credentials
 
 - **Admin Password**: `admin123`
-- **Access Admin Panel**: Navigate to `/admin` or `/admin/login`
+- **Admin Panel URL**: `/admin`
+- **Login URL**: `/admin/login`
 
 ---
 
-## 👤 Author
+## 🧭 Application Pages
+
+| Route | Description |
+|-------|-------------|
+| `/dashboard` | Main weather dashboard with GPS detection & auto-refresh |
+| `/forecast` | 7-day weather forecast with hourly breakdown |
+| `/current-weather` | Detailed current weather conditions |
+| `/locations` | Manage saved weather locations |
+| `/temperature-stats` | Temperature analytics with charts |
+| `/settings` | Application settings and preferences |
+| `/admin` | Full admin panel for data management |
+| `/admin/login` | Secure admin authentication |
+
+---
+
+## 🤝 Support & Contributing
+
+Feel free to fork this repository and submit pull requests for new features or bug fixes.
+
+---
+
+## 📜 License
+
+This project is distributed under the MIT License.
+
+---
+
+## 👤 Project Author
 
 **Bishmeeta Thapa**
 - GitHub: [@BishmeetaThapa](https://github.com/BishmeetaThapa)
@@ -239,5 +232,5 @@ weather-dashboard/
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for a better weather experience.</sub>
+  Built with ❤️ for weather enthusiasts
 </div>
