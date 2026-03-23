@@ -191,6 +191,57 @@ export const fetchWeather = async (city: string = DEFAULT_LOCATION.name): Promis
     }
 };
 
+// Fetch weather by coordinates
+export const fetchWeatherByCoords = async (lat: number, lon: number): Promise<FullWeatherData> => {
+    try {
+        const weatherRes = await axios.get<BackendWeatherData>(`${API_URL}/weather?lat=${lat}&lon=${lon}`);
+
+        // Get city name from coordinates - use reverse geocoding or nearest location
+        const cityName = weatherRes.data.city || "Current Location";
+
+        // Try to get forecast for the location
+        let forecastRes;
+        try {
+            forecastRes = await axios.get<{ list: BackendForecast[] }>(`${API_URL}/forecast/city/fetch?city=${cityName}`);
+        } catch {
+            forecastRes = { data: { list: [] } };
+        }
+
+        const weatherData = mapWeatherData(weatherRes.data);
+
+        const rawForecasts = forecastRes.data?.list || [];
+
+        const daily: DailyForecast[] = rawForecasts.map((f: BackendForecast) => ({
+            id: f._id || Math.random().toString(),
+            day: new Date(f.date).toLocaleDateString('en-US', { weekday: 'short' }),
+            temp_min: f.temperature - 2,
+            temp_max: f.temperature + 2,
+            condition: f.weather || 'Clear',
+            icon: f.icon || 'sun'
+        })).slice(0, 7);
+
+        // Get real hourly data from backend
+        let hourly: HourlyForecast[] = [];
+        try {
+            const hourlyRes = await axios.get<{ list: BackendHourlyForecast[] }>(`${API_URL}/hourly-forecast/city?city=${cityName}`);
+            if (hourlyRes.data.list && hourlyRes.data.list.length > 0) {
+                hourly = hourlyRes.data.list.slice(0, 24).map((item, index) => mapHourlyForecast(item, index));
+            }
+        } catch (hourlyError) {
+            console.error("Error fetching hourly data:", hourlyError instanceof Error ? hourlyError.message : "Unknown error");
+        }
+
+        return {
+            ...weatherData,
+            hourly,
+            daily
+        };
+    } catch (error) {
+        console.error("Error fetching weather by coords from backend:", error);
+        throw new Error("Could not fetch weather data from server.");
+    }
+};
+
 export const getWeatherIcon = (condition: string): string => {
     const cond = condition.toLowerCase();
     if (cond.includes('clear')) return 'sun';

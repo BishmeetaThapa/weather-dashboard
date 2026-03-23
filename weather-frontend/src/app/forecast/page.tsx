@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { fetchWeather, FullWeatherData } from "@/lib/weatherApi";
+import { fetchWeather, fetchWeatherByCoords, FullWeatherData } from "@/lib/weatherApi";
 import SearchBar from "@/components/weather/SearchBar";
 import CurrentWeather from "@/components/weather/CurrentWeather";
 import HourlyForecast from "@/components/weather/HourlyForecast";
@@ -9,7 +9,7 @@ import WeeklyForecast from "@/components/weather/WeeklyForecast";
 import WeatherDetails from "@/components/weather/WeatherDetails";
 import WeatherBackground from "@/components/weather/WeatherBackground";
 import WeatherSkeleton from "@/components/weather/WeatherSkeleton";
-import { AlertCircle, RefreshCw, Clock } from "lucide-react";
+import { AlertCircle, RefreshCw, Clock, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -21,17 +21,20 @@ export default function ForecastPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [city, setCity] = useState("Kathmandu");
+  const [useLocation, setUseLocation] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState<"loading" | "granted" | "denied">("loading");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const loadData = useCallback(async (searchCity: string) => {
+  const loadDataByCity = useCallback(async (searchCity: string) => {
     try {
       setLoading(true);
       setError(null);
       const data = await fetchWeather(searchCity);
       setWeather(data);
       setLastUpdated(new Date());
+      setUseLocation(false);
     } catch (err: any) {
       console.error("Failed to fetch weather:", err);
       setError(err.message || "Failed to load weather data.");
@@ -40,16 +43,62 @@ export default function ForecastPage() {
     }
   }, []);
 
+  const loadDataByCoords = useCallback(async (lat: number, lon: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchWeatherByCoords(lat, lon);
+      setWeather(data);
+      setLastUpdated(new Date());
+      setUseLocation(true);
+    } catch (err: any) {
+      console.error("Failed to fetch weather by coords:", err);
+      setError(err.message || "Failed to load weather data.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // GPS-based data fetch
+  const loadDataWithGPS = useCallback(() => {
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      setGpsStatus("loading");
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setGpsStatus("granted");
+          loadDataByCoords(position.coords.latitude, position.coords.longitude);
+        },
+        () => {
+          setGpsStatus("denied");
+          loadDataByCity(city);
+        },
+        { timeout: 10000 }
+      );
+    } else {
+      setGpsStatus("denied");
+      loadDataByCity(city);
+    }
+  }, [city, loadDataByCity, loadDataByCoords]);
+
   // Initial data fetch
   useEffect(() => {
-    loadData(city);
-  }, [city, loadData]);
+    loadDataWithGPS();
+  }, []);
 
   // Auto-refresh functionality
   useEffect(() => {
     if (autoRefresh) {
       intervalRef.current = setInterval(() => {
-        loadData(city);
+        if (useLocation && navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              loadDataByCoords(position.coords.latitude, position.coords.longitude);
+            },
+            () => { }
+          );
+        } else {
+          loadDataByCity(city);
+        }
       }, REFRESH_INTERVAL);
     }
 
@@ -58,10 +107,15 @@ export default function ForecastPage() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [autoRefresh, city, loadData]);
+  }, [autoRefresh, useLocation, city, loadDataByCity, loadDataByCoords]);
 
   const handleSearch = (newCity: string) => {
     setCity(newCity);
+    loadDataByCity(newCity);
+  };
+
+  const handleUseMyLocation = () => {
+    loadDataWithGPS();
   };
 
   const toggleAutoRefresh = () => {
@@ -94,17 +148,21 @@ export default function ForecastPage() {
         />
 
         <main className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="search"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-            >
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <div className="flex-1">
               <SearchBar onSearch={handleSearch} />
-            </motion.div>
-          </AnimatePresence>
+            </div>
+            <button
+              onClick={handleUseMyLocation}
+              className={`flex items-center gap-2 px-4 py-3 rounded-2xl font-medium transition-all ${useLocation
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-white/10 text-white/60 hover:bg-white/20"
+                }`}
+            >
+              <MapPin size={18} />
+              Use My Location
+            </button>
+          </div>
 
           {/* Auto-refresh toggle and last updated */}
           <div className="flex items-center justify-between mt-4 mb-6">
@@ -112,14 +170,15 @@ export default function ForecastPage() {
               <span className="flex items-center gap-2 text-sm text-white/40">
                 <Clock size={14} />
                 Updated: {formatLastUpdated(lastUpdated)}
+                {useLocation && <span className="text-primary">(Your Location)</span>}
               </span>
             )}
             <div className="flex items-center gap-2 ml-auto">
               <button
                 onClick={toggleAutoRefresh}
                 className={`p-2 rounded-xl transition-all ${autoRefresh
-                  ? "bg-emerald-500/20 text-emerald-400"
-                  : "bg-white/10 text-white/40"
+                    ? "bg-emerald-500/20 text-emerald-400"
+                    : "bg-white/10 text-white/40"
                   }`}
                 title={autoRefresh ? "Auto-refresh ON (2 min)" : "Auto-refresh OFF"}
               >
@@ -138,7 +197,7 @@ export default function ForecastPage() {
               <h3 className="text-xl font-bold text-white mb-2">Oops! Something went wrong</h3>
               <p className="text-white/60 mb-6">{error}</p>
               <button
-                onClick={() => loadData(city)}
+                onClick={() => useLocation ? loadDataWithGPS() : loadDataByCity(city)}
                 className="flex items-center gap-2 mx-auto px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all border border-white/20"
               >
                 <RefreshCw size={18} />
