@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent } from "@/components/ui/Card";
 import { fetchWeather, WeatherData } from "@/lib/weatherApi";
@@ -8,13 +8,18 @@ import { WeatherAdminPanel } from "@/components/weather/WeatherAdminPanel";
 import CurrentWeather from "@/components/weather/CurrentWeather";
 import WeatherDetails from "@/components/weather/WeatherDetails";
 import WeatherBackground from "@/components/weather/WeatherBackground";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export default function CurrentWeatherPage() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const getData = useCallback(async () => {
     try {
@@ -22,6 +27,7 @@ export default function CurrentWeatherPage() {
       setError(null);
       const data = await fetchWeather("Kathmandu");
       setWeather(data);
+      setLastUpdated(new Date());
     } catch (err: any) {
       console.error("Failed to fetch weather:", err);
       setError(
@@ -34,9 +40,34 @@ export default function CurrentWeatherPage() {
     }
   }, []);
 
+  // Initial data fetch
   useEffect(() => {
     getData();
   }, [getData]);
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        getData();
+      }, REFRESH_INTERVAL);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [autoRefresh, getData]);
+
+  const toggleAutoRefresh = () => {
+    setAutoRefresh(prev => !prev);
+  };
+
+  const formatLastUpdated = (date: Date | null) => {
+    if (!date) return "";
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const currentHour = new Date().getHours();
   const isNight = currentHour >= 18 || currentHour <= 6;
@@ -59,6 +90,26 @@ export default function CurrentWeatherPage() {
       />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-6 space-y-10">
+        {/* Auto-refresh toggle and last updated */}
+        <div className="flex items-center justify-between">
+          {lastUpdated && (
+            <span className="flex items-center gap-2 text-sm text-white/40">
+              <Clock size={14} />
+              Updated: {formatLastUpdated(lastUpdated)}
+            </span>
+          )}
+          <button
+            onClick={toggleAutoRefresh}
+            className={`p-2 rounded-xl transition-all ${autoRefresh
+                ? "bg-emerald-500/20 text-emerald-400"
+                : "bg-white/10 text-white/40"
+              }`}
+            title={autoRefresh ? "Auto-refresh ON (5 min)" : "Auto-refresh OFF"}
+          >
+            <RefreshCw size={16} className={autoRefresh ? "animate-pulse" : ""} />
+          </button>
+        </div>
+
         <AnimatePresence mode="wait">
           {error && !weather ? (
             <motion.div

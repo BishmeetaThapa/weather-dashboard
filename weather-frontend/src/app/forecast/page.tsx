@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { fetchWeather, FullWeatherData } from "@/lib/weatherApi";
 import SearchBar from "@/components/weather/SearchBar";
 import CurrentWeather from "@/components/weather/CurrentWeather";
@@ -9,16 +9,21 @@ import WeeklyForecast from "@/components/weather/WeeklyForecast";
 import WeatherDetails from "@/components/weather/WeatherDetails";
 import WeatherBackground from "@/components/weather/WeatherBackground";
 import WeatherSkeleton from "@/components/weather/WeatherSkeleton";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { MainLayout } from "@/components/layout/MainLayout";
+
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export default function ForecastPage() {
   const [weather, setWeather] = useState<FullWeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [city, setCity] = useState("Kathmandu");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadData = useCallback(async (searchCity: string) => {
     try {
@@ -26,6 +31,7 @@ export default function ForecastPage() {
       setError(null);
       const data = await fetchWeather(searchCity);
       setWeather(data);
+      setLastUpdated(new Date());
     } catch (err: any) {
       console.error("Failed to fetch weather:", err);
       setError(err.message || "Failed to load weather data.");
@@ -34,12 +40,37 @@ export default function ForecastPage() {
     }
   }, []);
 
+  // Initial data fetch
   useEffect(() => {
     loadData(city);
   }, [city, loadData]);
 
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        loadData(city);
+      }, REFRESH_INTERVAL);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [autoRefresh, city, loadData]);
+
   const handleSearch = (newCity: string) => {
     setCity(newCity);
+  };
+
+  const toggleAutoRefresh = () => {
+    setAutoRefresh(prev => !prev);
+  };
+
+  const formatLastUpdated = (date: Date | null) => {
+    if (!date) return "";
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const currentHour = new Date().getHours();
@@ -74,6 +105,28 @@ export default function ForecastPage() {
               <SearchBar onSearch={handleSearch} />
             </motion.div>
           </AnimatePresence>
+
+          {/* Auto-refresh toggle and last updated */}
+          <div className="flex items-center justify-between mt-4 mb-6">
+            {lastUpdated && (
+              <span className="flex items-center gap-2 text-sm text-white/40">
+                <Clock size={14} />
+                Updated: {formatLastUpdated(lastUpdated)}
+              </span>
+            )}
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                onClick={toggleAutoRefresh}
+                className={`p-2 rounded-xl transition-all ${autoRefresh
+                    ? "bg-emerald-500/20 text-emerald-400"
+                    : "bg-white/10 text-white/40"
+                  }`}
+                title={autoRefresh ? "Auto-refresh ON (5 min)" : "Auto-refresh OFF"}
+              >
+                <RefreshCw size={16} className={autoRefresh ? "animate-pulse" : ""} />
+              </button>
+            </div>
+          </div>
 
           {error && (
             <motion.div
