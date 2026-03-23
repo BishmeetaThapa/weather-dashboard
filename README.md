@@ -4,27 +4,44 @@ A production-ready weather forecasting application designed for professional mon
 
 ---
 
-## 🌟 Key Features
+## 🔹 Level 1: Core Features (Fundamentals)
 
 ### Weather Monitoring
-- **Real-Time Dashboard** - Live weather updates with auto-refresh every 5 minutes
-- **7-Day Forecast** - Comprehensive weekly weather predictions
-- **Hourly Forecasts** - 24-48 hour detailed hourly breakdowns
-- **Current Weather** - Temperature, humidity, wind speed, pressure, and more
+- **Current Weather Display** - View real-time temperature, humidity, wind speed, pressure, and weather conditions
+- **7-Day Forecast** - Comprehensive weekly weather predictions with detailed breakdowns
+- **Hourly Forecasts** - 24-48 hour detailed hourly weather predictions
+- **Location Search** - Search and view weather for any city worldwide
+- **GPS Detection** - Automatic weather based on user's current location
+- **Multiple Locations** - Save and track weather for multiple cities
+
+### User Interface
+- **Responsive Design** - Works seamlessly on mobile, tablet, and desktop
+- **Modern Dashboard** - Clean, intuitive weather dashboard layout
+- **Weather Animations** - Smooth animations and visual effects
+- **Dark Theme** - Beautiful dark-mode interface
+
+---
+
+## 🔹 Level 2: Enhanced Management (Growth)
+
+### Advanced Weather Features
+- **Auto-Refresh** - Real-time weather updates every 5 minutes with toggle control
+- **Last Updated Timestamps** - Know exactly when data was last fetched
 - **Temperature Statistics** - Interactive charts and analytics
-- **Location Management** - Save, edit, and manage multiple locations
+- **Weather Details** - Detailed breakdown of all weather metrics
 
 ### Admin & Management
 - **Admin Dashboard** - Full control over weather data management
 - **CRUD Operations** - Create, read, update, delete for all data types
 - **Hourly Data Management** - Manage hourly forecast entries via UI
-- **Location CRUD** - Add/edit/delete tracked locations
+- **Location Management** - Add, edit, delete tracked locations
+- **Weather Data Editor** - Modify weather records directly
 
-### Technical Highlights
-- **GPS Location Detection** - Automatic weather based on your position
-- **Responsive Design** - Works seamlessly on mobile, tablet, and desktop
-- **Glassmorphism UI** - Modern, beautiful interface with animations
-- **MongoDB Persistence** - All data stored persistently
+### Data & Storage
+- **MongoDB Persistence** - All data stored persistently in database
+- **RESTful API** - Full backend API for weather data
+- **Location Tracking** - Track multiple locations with coordinates
+- **Forecast Storage** - Store and retrieve historical forecasts
 
 ---
 
@@ -53,9 +70,9 @@ weather-dashboard/
 │   ├── controllers/            # Route handlers
 │   ├── models/                 # Mongoose schemas
 │   ├── routes/                 # API routes
-│   ├── services/               # Business logic
-│   ├── middleware/             # Custom middleware
-│   ├── db/                     # Database configuration
+│   ├── services/              # Business logic
+│   ├── middleware/            # Custom middleware
+│   ├── db/                    # Database configuration
 │   └── package.json
 │
 └── README.md                   # Project documentation
