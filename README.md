@@ -45,6 +45,20 @@ A production-ready weather forecasting application designed for professional mon
 
 ---
 
+## 📸 Screenshots
+
+| Page | Screenshot |
+|------|------------|
+| Dashboard | ![Dashboard](/weather-frontend/public/dashboard.png) |
+| Forecast | ![Forecast](/weather-frontend/public/forecast.png) |
+| Current Weather | ![Current Weather](/weather-frontend/public/current.png) |
+| Locations | ![Locations](/weather-frontend/public/locations.png) |
+| Temperature Stats | ![Temperature Stats](/weather-frontend/public/temperature.png) |
+| Admin Panel | ![Admin Panel](/weather-frontend/public/admin.png) |
+| CRUD Operations | ![CRUD](/weather-frontend/public/crud.png) |
+
+---
+
 ## 📂 Project Structure
 
 ```
