@@ -78,7 +78,6 @@ const getHourlyForecastsByCity = async (req, res) => {
         }
 
         // If no data in database, fetch from Open-Meteo API
-        // First get coordinates for the city using Open-Meteo Geocoding
         const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
 
         let lat = DEFAULT_LAT;
@@ -119,7 +118,6 @@ const getHourlyForecastsByCity = async (req, res) => {
 
         const hourly = hourlyData.hourly;
         const forecastsToSave = [];
-        const today = new Date().toISOString().split('T')[0];
 
         for (let i = 0; i < Math.min(hourly.time.length, 48); i++) {
             const dateTime = new Date(hourly.time[i]);
@@ -142,7 +140,7 @@ const getHourlyForecastsByCity = async (req, res) => {
             forecastsToSave.push(forecastEntry);
         }
 
-        // Try to save to database for future reference
+        // Save to database
         try {
             await HourlyForecast.insertMany(forecastsToSave);
             console.log(`Hourly forecast data saved to database for ${city}`);

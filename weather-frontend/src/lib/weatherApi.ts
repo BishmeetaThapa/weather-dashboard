@@ -154,11 +154,11 @@ const mapWeatherData = (data: BackendWeatherData): WeatherData => {
 export const fetchWeather = async (city: string = DEFAULT_LOCATION.name): Promise<FullWeatherData> => {
     try {
         const weatherRes = await axios.get<BackendWeatherData>(`${API_URL}/weather/${city}`);
-        const forecastRes = await axios.get<{ list: BackendForecast[] }>(`${API_URL}/forecast/city/fetch?city=${city}`);
+        const forecastRes = await axios.get<{ list: BackendForecast[] }>(`${API_URL}/forecast?city=${city}`);
 
         const weatherData = mapWeatherData(weatherRes.data);
 
-        const rawForecasts = forecastRes.data.list || [];
+        const rawForecasts = (forecastRes.data.list || forecastRes.data) || [];
 
         const daily: DailyForecast[] = rawForecasts.map((f: BackendForecast) => ({
             id: f._id || Math.random().toString(),

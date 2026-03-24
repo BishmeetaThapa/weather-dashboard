@@ -93,9 +93,7 @@ export default function SettingsPage() {
     setError(null);
 
     try {
-      // Save to localStorage
       localStorage.setItem("userSettings", JSON.stringify(settings));
-
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {
@@ -119,7 +117,6 @@ export default function SettingsPage() {
   const handleDeactivate = () => {
     if (confirm("Are you sure you want to deactivate this node? All local data will be deleted.")) {
       setLoading(true);
-      // Clear all local storage
       localStorage.clear();
       setSettings(defaultSettings);
       setTimeout(() => {
@@ -161,7 +158,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Profile Section */}
           <section className="space-y-6">
             <div className="flex items-center gap-3 px-3">
               <div className="p-2 bg-primary/20 rounded-lg">
@@ -225,7 +221,6 @@ export default function SettingsPage() {
             </Card>
           </section>
 
-          {/* Language & Region */}
           <section className="space-y-6">
             <div className="flex items-center gap-3 px-3">
               <div className="p-2 bg-purple-500/20 rounded-lg">
@@ -269,7 +264,6 @@ export default function SettingsPage() {
             </Card>
           </section>
 
-          {/* Units & Region */}
           <section className="space-y-6">
             <div className="flex items-center gap-3 px-3">
               <div className="p-2 bg-accent/20 rounded-lg">
@@ -325,7 +319,6 @@ export default function SettingsPage() {
             </Card>
           </section>
 
-          {/* Alerts & Security */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <section className="space-y-6">
               <div className="flex items-center gap-3 px-3">
@@ -336,7 +329,6 @@ export default function SettingsPage() {
               </div>
               <Card className="bg-gray-800/20 backdrop-blur-xl border border-gray-700/40 rounded-3xl shadow-md">
                 <CardContent className="p-6 space-y-6">
-                  {/* Weather Alerts Toggle */}
                   <div
                     className="flex items-center justify-between group/toggle cursor-pointer"
                     onClick={() => toggleSetting("weatherAlerts")}
@@ -350,7 +342,6 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  {/* Daily Summary Toggle */}
                   <div
                     className="flex items-center justify-between group/toggle cursor-pointer"
                     onClick={() => toggleSetting("dailySummary")}
@@ -399,7 +390,6 @@ export default function SettingsPage() {
             </section>
           </div>
 
-          {/* Danger Zone */}
           <Card className="bg-gray-900/10 border border-gray-700/40 mt-10 rounded-3xl">
             <CardContent className="p-8 flex items-center justify-between">
               <div className="space-y-1">

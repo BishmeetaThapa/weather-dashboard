@@ -1,83 +1,102 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Wind, Droplets, ArrowUp, Compass, Eye, Gauge, Sun } from 'lucide-react';
-import { WeatherData } from '@/lib/weatherApi';
+import { Card, CardContent } from "@/components/ui/Card";
+import { Droplets, Wind, Sun, Cloud, Thermometer, Eye } from "lucide-react";
+
+import { WeatherData } from "@/lib/weatherApi";
 
 interface WeatherDetailsProps {
-  data: WeatherData;
+  weatherData?: WeatherData | null;
 }
 
-interface DetailCardProps {
-  icon: React.ElementType;
-  label: string;
-  value: string | number;
-  description?: string;
-  colorClass?: string;
-}
+export default function WeatherDetails({ weatherData }: WeatherDetailsProps) {
+  if (!weatherData) {
+    return (
+      <Card className="bg-gray-800/20 backdrop-blur-xl border border-gray-700/40 rounded-3xl">
+        <CardContent className="p-6 text-center">
+          <p className="text-white/60 font-bold">No weather details available</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-const DetailCard = ({ icon: Icon, label, value, description, colorClass }: DetailCardProps) => (
-  <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-5 flex flex-col justify-between hover:bg-white/15 transition-all group shadow-md shrink-0 sm:shrink">
-    <div className="flex items-center gap-2 mb-4">
-      <div className={`p-2 rounded-xl bg-white/5 ${colorClass}`}>
-        <Icon size={18} />
-      </div>
-      <span className="text-xs font-semibold text-white/50 uppercase tracking-tighter">{label}</span>
-    </div>
-    <div>
-      <p className="text-2xl font-bold text-white mb-1 tracking-tight">{value}</p>
-      {description && <p className="text-xs text-white/40">{description}</p>}
-    </div>
-  </div>
-);
+  const details = [
+    {
+      title: "Humidity",
+      value: weatherData.humidity ?? "--",
+      unit: "%",
+      icon: Droplets,
+      bg: "bg-blue-500/20",
+      color: "text-blue-400",
+    },
+    {
+      title: "Wind Speed",
+      value: weatherData.wind?.speed ?? "--",
+      unit: "km/h",
+      icon: Wind,
+      bg: "bg-cyan-500/20",
+      color: "text-cyan-400",
+    },
+    {
+      title: "Cloud Cover",
+      value: weatherData.clouds?.all ?? "--",
+      unit: "%",
+      icon: Cloud,
+      bg: "bg-purple-500/20",
+      color: "text-purple-400",
+    },
+    {
+      title: "UV Index",
+      value: weatherData.uvIndex ?? "--",
+      unit: "",
+      icon: Sun,
+      bg: "bg-amber-500/20",
+      color: "text-amber-400",
+    },
+    {
+      title: "Pressure",
+      value: weatherData.pressure ?? "--",
+      unit: "hPa",
+      icon: Thermometer,
+      bg: "bg-rose-500/20",
+      color: "text-rose-400",
+    },
+    {
+      title: "Visibility",
+      value: weatherData.visibility ? (weatherData.visibility / 1000).toFixed(1) : "--",
+      unit: "km",
+      icon: Eye,
+      bg: "bg-indigo-500/20",
+      color: "text-indigo-400",
+    },
+  ];
 
-const WeatherDetails: React.FC<WeatherDetailsProps> = ({ data }) => {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-      <DetailCard 
-        icon={Sun} 
-        label="UV Index" 
-        value={data.uvIndex} 
-        description={data.uvIndex > 5 ? "Use sun protection" : "Low risk"}
-        colorClass="text-yellow-400"
-      />
-      <DetailCard 
-        icon={Wind} 
-        label="Wind" 
-        value={`${data.wind.speed} km/h`} 
-        description={`Direction: ${data.wind.deg}°`}
-        colorClass="text-sky-400"
-      />
-      <DetailCard 
-        icon={Droplets} 
-        label="Humidity" 
-        value={`${data.humidity}%`} 
-        description={`Dew point is ${Math.round(data.temperature - 2)}° right now`}
-        colorClass="text-blue-400"
-      />
-      <DetailCard 
-        icon={Eye} 
-        label="Visibility" 
-        value={`${(data.visibility / 1000).toFixed(1)} km`} 
-        description={data.visibility > 5000 ? "Clear view" : "Reduced visibility"}
-        colorClass="text-emerald-400"
-      />
-      <DetailCard 
-        icon={Gauge} 
-        label="Pressure" 
-        value={`${data.pressure} hPa`} 
-        description="Atmospheric pressure"
-        colorClass="text-purple-400"
-      />
-      <DetailCard 
-        icon={Compass} 
-        label="Feels Like" 
-        value={`${Math.round(data.feels_like)}°`} 
-        description="Similar to actual temperature"
-        colorClass="text-orange-400"
-      />
-    </div>
+    <Card className="bg-gray-800/20 backdrop-blur-xl border border-gray-700/40 rounded-3xl">
+      <CardContent className="p-6">
+        <h3 className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em] mb-6">
+          Weather Details
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {details.map((detail, index) => (
+            <div
+              key={index}
+              className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+            >
+              <div className={`p-2 rounded-xl ${detail.bg} w-fit mb-3`}>
+                <detail.icon className={`w-4 h-4 ${detail.color}`} />
+              </div>
+              <p className="text-[10px] font-black text-white/50 uppercase tracking-wider">
+                {detail.title}
+              </p>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-xl font-bold text-white">{detail.value}</span>
+                <span className="text-xs font-medium text-white/60">{detail.unit}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
-};
-
-export default WeatherDetails;
+}

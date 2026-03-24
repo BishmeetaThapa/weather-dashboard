@@ -152,11 +152,11 @@ export default function CurrentWeatherPage() {
             >
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
-                  <CurrentWeather data={weather} />
+                  <CurrentWeather weatherData={weather} />
                 </div>
 
                 <div>
-                  <WeatherDetails data={weather} />
+                  <WeatherDetails weatherData={weather} />
                 </div>
               </div>
 

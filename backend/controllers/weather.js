@@ -1,7 +1,6 @@
 import Weather from "../models/Weather.js";
 import { fetchAndSaveHourlyForecast } from "../services/weatherService.js";
 
-
 // Default coordinates for Kathmandu
 const DEFAULT_LAT = 27.7172;
 const DEFAULT_LON = 85.3240;
@@ -9,20 +8,15 @@ const DEFAULT_LON = 85.3240;
 // CREATE new weather and automatically fetch hourly forecast
 const createWeather = async (req, res) => {
   try {
-    // Create weather data
     const weather = await Weather.create(req.body);
-
-    // Get city name from the created weather data
     const city = req.body.city || (req.body.location && req.body.location.city);
 
     if (city) {
-      // Automatically fetch and save hourly forecast from OpenWeatherMap
       try {
         await fetchAndSaveHourlyForecast(city, 24);
         console.log(`Hourly forecast automatically created for ${city}`);
       } catch (hourlyError) {
         console.error(`Failed to fetch hourly forecast for ${city}:`, hourlyError.message);
-        // Don't fail the request if hourly forecast fails
       }
     }
 
@@ -35,7 +29,7 @@ const createWeather = async (req, res) => {
 
 // Helper function to calculate distance using Haversine formula
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Earth's radius in km
+  const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
@@ -43,7 +37,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Distance in km
+  return R * c;
 };
 
 // GET all weather from DB (with optional coordinate sorting)
@@ -52,15 +46,19 @@ const getWeather = async (req, res) => {
     const { lat, lon } = req.query;
     let data = await Weather.find().lean().sort({ createdAt: -1 });
 
+    // If lat/lon provided, return only the closest weather data (for GPS/dashboard)
     if (lat && lon && data.length > 0) {
       const userLat = parseFloat(lat);
       const userLon = parseFloat(lon);
 
-      // Calculate distance for each node and sort
+      // Calculate distance for each and find closest
       data = data.map(node => {
         const distance = calculateDistance(userLat, userLon, node.coordinates.lat, node.coordinates.lon);
         return { ...node, distance };
       }).sort((a, b) => a.distance - b.distance);
+
+      // Return only the closest one as array for consistency
+      return res.send([data[0]]);
     }
 
     res.send(data);
@@ -91,9 +89,20 @@ const deleteWeatherById = async (req, res) => {
 // GET weather by City - fetches from Open-Meteo if not in database
 const getWeatherByCity = async (req, res) => {
   try {
-    const city = req.params.city || req.query.city;
+    const { lat: latParam, lon: lonParam, city: cityParam } = req.query;
+    let city = req.params.city || cityParam;
+
+    let latVal = latParam ? parseFloat(latParam) : DEFAULT_LAT;
+    let lonVal = lonParam ? parseFloat(lonParam) : DEFAULT_LON;
+
+    // If no city provided but we have coordinates, use a default city name
+    if (!city && latParam && lonParam) {
+      city = "Current Location";
+    }
+
+    // If still no city, use default
     if (!city) {
-      return res.status(400).send("City parameter is required");
+      city = "Kathmandu";
     }
 
     // First, try to find existing weather data in database
@@ -101,34 +110,37 @@ const getWeatherByCity = async (req, res) => {
       city: { $regex: new RegExp(`^${city}$`, 'i') }
     }).sort({ createdAt: -1 });
 
-    // If we have existing data within 30 minutes, return it
+    // If we have existing data within 1 minute, return it
     if (weather) {
       const dataAge = Date.now() - new Date(weather.createdAt).getTime();
-      if (dataAge < 30 * 60 * 1000) { // 30 minutes
+      if (dataAge < 60 * 1000) {
+        // If request has no city/coordinates params, return array for admin page
+        if (!latParam && !lonParam && !cityParam && !req.params.city) {
+          return res.send([weather]);
+        }
         return res.send(weather);
       }
     }
 
     // If no data in database or data is too old, fetch from Open-Meteo API
-    // First get coordinates for the city using Open-Meteo Geocoding
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
-
-    let lat = DEFAULT_LAT;
-    let lon = DEFAULT_LON;
+    const lat = latVal;
+    const lon = lonVal;
     let foundCity = city;
+    let country = "Unknown";
 
-    try {
-      const geoResponse = await fetch(geoUrl);
-      const geoData = await geoResponse.json();
-
-      if (geoData.results && geoData.results.length > 0) {
-        lat = geoData.results[0].latitude;
-        lon = geoData.results[0].longitude;
-        foundCity = geoData.results[0].name;
+    // Get city and country from geocoding
+    if (city && city !== "Current Location") {
+      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+      try {
+        const geoResponse = await fetch(geoUrl);
+        const geoData = await geoResponse.json();
+        if (geoData.results && geoData.results.length > 0) {
+          foundCity = geoData.results[0].name;
+          country = geoData.results[0].country || "Unknown";
+        }
+      } catch (geoError) {
+        console.error("Geocoding error:", geoError);
       }
-    } catch (geoError) {
-      console.error("Geocoding error:", geoError);
-      // Use default coordinates
     }
 
     // Fetch current weather from Open-Meteo
@@ -170,10 +182,10 @@ const getWeatherByCity = async (req, res) => {
 
     const weatherInfo = weatherCodeMap[current.weather_code] || { main: "Clouds", description: "Unknown" };
 
-    // Create weather object in our format
+    // Create weather object
     const weatherObj = {
       city: foundCity,
-      country: "Unknown",
+      country: country,
       coordinates: { lat, lon },
       weather: [
         {
@@ -207,7 +219,7 @@ const getWeatherByCity = async (req, res) => {
       createdAt: new Date()
     };
 
-    // Try to save to database (don't fail if it doesn't work)
+    // Save to database
     try {
       const newWeather = await Weather.create(weatherObj);
       weather = newWeather;
@@ -215,6 +227,10 @@ const getWeatherByCity = async (req, res) => {
       console.error("Error saving weather to database:", saveError);
     }
 
+    // If request has no city/coordinates params, return array for admin page
+    if (!latParam && !lonParam && !cityParam && !req.params.city) {
+      return res.send([weather]);
+    }
     res.send(weather);
 
   } catch (error) {

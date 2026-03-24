@@ -28,6 +28,17 @@ import { useRouter } from "next/navigation";
 
 type TabType = 'infrastructure' | 'locations' | 'hourly';
 
+const weatherOptions = [
+  { value: "Clear", label: "Clear Sky", icon: "01d" },
+  { value: "Clouds", label: "Cloudy", icon: "04d" },
+  { value: "Rain", label: "Rainy", icon: "10d" },
+  { value: "Drizzle", label: "Drizzle", icon: "09d" },
+  { value: "Thunderstorm", label: "Thunderstorm", icon: "11d" },
+  { value: "Snow", label: "Snow", icon: "13d" },
+  { value: "Mist", label: "Mist", icon: "50d" },
+  { value: "Fog", label: "Fog", icon: "50d" },
+];
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabType>('infrastructure');
   const [weatherList, setWeatherList] = useState<any[]>([]);
@@ -130,6 +141,14 @@ export default function AdminPage() {
         lon: item.lon,
         region: item.region
       });
+    } else if (type === 'hourly') {
+      setEditForm({
+        temperature: item.temperature,
+        condition: item.condition,
+        humidity: item.humidity,
+        wind_speed: item.wind_speed,
+        precipitation: item.precipitation
+      });
     }
   };
 
@@ -145,6 +164,8 @@ export default function AdminPage() {
         await weatherService.updateWeatherData(id, updated);
       } else if (type === 'locations') {
         await locationService.updateLocation(id, editForm);
+      } else if (type === 'hourly') {
+        await hourlyForecastService.updateHourlyForecast(id, editForm);
       }
 
       setEditingId(null);
@@ -386,7 +407,11 @@ export default function AdminPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Main</label>
-                <input type="text" value={editForm.main} onChange={(e) => setEditForm({ ...editForm, main: e.target.value })} className="admin-input" />
+                <select value={editForm.main} onChange={(e) => setEditForm({ ...editForm, main: e.target.value, description: weatherOptions.find(opt => opt.value === e.target.value)?.label || editForm.description })} className="admin-input">
+                  {weatherOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Desc</label>
@@ -480,7 +505,11 @@ export default function AdminPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-white/30 uppercase tracking-widest px-1">Condition</label>
-                <input type="text" value={editForm.condition} onChange={(e) => setEditForm({ ...editForm, condition: e.target.value })} className="admin-input" />
+                <select value={editForm.condition} onChange={(e) => setEditForm({ ...editForm, condition: e.target.value })} className="admin-input">
+                  {weatherOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
             </>
           ) : (
@@ -510,17 +539,6 @@ export default function AdminPage() {
 }
 
 function NewNodeModal({ isOpen, onClose, onAdd, form, setForm, loading }: any) {
-  const weatherOptions = [
-    { value: "Clear", label: "Clear Sky", icon: "01d" },
-    { value: "Clouds", label: "Cloudy", icon: "04d" },
-    { value: "Rain", label: "Rainy", icon: "10d" },
-    { value: "Drizzle", label: "Drizzle", icon: "09d" },
-    { value: "Thunderstorm", label: "Thunderstorm", icon: "11d" },
-    { value: "Snow", label: "Snow", icon: "13d" },
-    { value: "Mist", label: "Mist", icon: "50d" },
-    { value: "Fog", label: "Fog", icon: "50d" },
-  ];
-
   return (
     <AnimatePresence>
       {isOpen && (

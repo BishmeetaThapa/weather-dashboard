@@ -10,9 +10,17 @@ const createForecast = async (req, res) => {
   res.send("Forecast data created successfully!");
 };
 
-// GET all forecasts
+// GET all forecasts or by city query param
 const getForecasts = async (req, res) => {
-  const data = await Forecast.find().sort({ createdAt: -1 });
+  const { city } = req.query;
+  let data;
+  if (city) {
+    data = await Forecast.find({
+      city: { $regex: new RegExp(`^${city}$`, 'i') }
+    }).sort({ createdAt: -1 });
+  } else {
+    data = await Forecast.find().sort({ createdAt: -1 });
+  }
   res.send(data);
 };
 
@@ -53,7 +61,6 @@ const getForecastByCity = async (req, res) => {
     }
 
     // If no data in database, fetch from Open-Meteo API
-    // First get coordinates for the city using Open-Meteo Geocoding
     const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
 
     let lat = DEFAULT_LAT;
@@ -69,7 +76,6 @@ const getForecastByCity = async (req, res) => {
       }
     } catch (geoError) {
       console.error("Geocoding error:", geoError);
-      // Use default coordinates
     }
 
     // Fetch 7-day forecast from Open-Meteo
@@ -109,7 +115,6 @@ const getForecastByCity = async (req, res) => {
     };
 
     const forecastsToSave = [];
-    const today = new Date();
 
     for (let i = 0; i < daily.time.length; i++) {
       const date = new Date(daily.time[i]);
@@ -127,13 +132,12 @@ const getForecastByCity = async (req, res) => {
       forecastsToSave.push(forecastEntry);
     }
 
-    // Save to database for future reference
+    // Save to database
     try {
       await Forecast.insertMany(forecastsToSave);
       console.log(`Forecast data saved to database for ${city}`);
     } catch (saveError) {
       console.error("Error saving forecast to database:", saveError);
-      // Continue anyway - we can still return the data
     }
 
     res.send({

@@ -7,8 +7,8 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import WeatherBackground from "@/components/weather/WeatherBackground";
 import { CurrentWeatherSkeleton } from "@/components/weather/WeatherSkeleton";
 import { DashboardHeader } from "@/components/weather/DashboardHeader";
-import { PrimaryWeatherCard } from "@/components/weather/PrimaryWeatherCard";
-import { WeatherSidebarCards } from "@/components/weather/WeatherSidebarCards";
+import PrimaryWeatherCard from "@/components/weather/PrimaryWeatherCard";
+import WeatherSidebarCards from "@/components/weather/WeatherSidebarCards";
 import { LocationCard } from "@/components/weather/LocationCard";
 import { DashboardEmptyState } from "@/components/weather/DashboardEmptyState";
 
@@ -160,8 +160,12 @@ export default function DashboardPage() {
             >
               {/* Primary Weather and Sidebar */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <PrimaryWeatherCard weather={primaryWeather} />
-                <WeatherSidebarCards weather={primaryWeather} />
+                <motion.div className="lg:col-span-2" whileHover={{ y: -5, transition: { duration: 0.2 } }}>
+                  <PrimaryWeatherCard weather={primaryWeather} />
+                </motion.div>
+                <motion.div whileHover={{ y: -5, transition: { duration: 0.2 } }}>
+                  <WeatherSidebarCards weather={primaryWeather} />
+                </motion.div>
               </div>
 
               {/* Secondary Locations */}

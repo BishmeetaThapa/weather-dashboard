@@ -1,37 +1,62 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { fetchWeather, WeatherData } from "@/lib/weatherApi";
 import { StatCard } from "@/components/weather/StatCard";
 import WeatherBackground from "@/components/weather/WeatherBackground";
-import { 
-  Thermometer, 
-  ArrowUp, 
-  ArrowDown, 
-  Activity,
-  BarChart3
-} from "lucide-react";
+import { RefreshCw, Clock, Thermometer, ArrowUp, ArrowDown, Activity, BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
+
+const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
 
 export default function TemperatureStatsPage() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const getData = useCallback(async () => {
+    try {
+      const data = await fetchWeather();
+      setWeather(data);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error("Failed to fetch weather:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const getData = async () => {
-      try {
-        const data = await fetchWeather();
-        setWeather(data);
-      } catch (error) {
-        console.error("Failed to fetch weather:", error);
-      } finally {
-        setLoading(false);
+    getData();
+  }, [getData]);
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => {
+        getData();
+      }, REFRESH_INTERVAL);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
     };
-    getData();
-  }, []);
+  }, [autoRefresh, getData]);
+
+  const toggleAutoRefresh = () => {
+    setAutoRefresh(prev => !prev);
+  };
+
+  const formatLastUpdated = (date: Date | null) => {
+    if (!date) return "";
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const currentHour = new Date().getHours();
   const isNight = currentHour >= 18 || currentHour <= 6;
@@ -39,12 +64,35 @@ export default function TemperatureStatsPage() {
   if (loading) {
     return (
       <MainLayout pageTitle="Analyzing Temperature Data">
+        <WeatherBackground condition={weather?.condition || "Clear"} isNight={isNight} />
         <div className="flex items-center justify-center h-[60vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       </MainLayout>
     );
   }
+
+  // Auto-refresh toggle and last updated
+  const renderAutoRefreshControls = () => (
+    <div className="flex items-center justify-between mb-6">
+      {lastUpdated && (
+        <span className="flex items-center gap-2 text-sm text-white/40">
+          <Clock size={14} />
+          Updated: {formatLastUpdated(lastUpdated)}
+        </span>
+      )}
+      <button
+        onClick={toggleAutoRefresh}
+        className={`p-2 rounded-xl transition-all ${autoRefresh
+          ? "bg-emerald-500/20 text-emerald-400"
+          : "bg-white/10 text-white/40"
+          }`}
+        title={autoRefresh ? "Auto-refresh ON (2 min)" : "Auto-refresh OFF"}
+      >
+        <RefreshCw size={16} className={autoRefresh ? "animate-pulse" : ""} />
+      </button>
+    </div>
+  );
 
   if (!weather) return null;
 
@@ -54,35 +102,37 @@ export default function TemperatureStatsPage() {
 
   return (
     <MainLayout pageTitle="Temperature Analytics">
-       <WeatherBackground 
-        condition={weather.condition} 
-        isNight={isNight} 
+      <WeatherBackground
+        condition={weather.condition}
+        isNight={isNight}
       />
 
       <div className="relative z-10 space-y-8">
+        {renderAutoRefreshControls()}
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard 
-            label="Current Heat" 
-            value={Math.round(currentTemp)} 
-            unit="°C" 
-            icon={Thermometer} 
+          <StatCard
+            label="Current Heat"
+            value={Math.round(currentTemp)}
+            unit="°C"
+            icon={Thermometer}
             color="rose"
             trend={{ isUp: true, value: 24 }}
           />
-          <StatCard 
-            label="Max Vector" 
-            value={Math.round(tempMax)} 
-            unit="°C" 
-            icon={ArrowUp} 
-            color="amber" 
+          <StatCard
+            label="Max Vector"
+            value={Math.round(tempMax)}
+            unit="°C"
+            icon={ArrowUp}
+            color="amber"
           />
-          <StatCard 
-            label="Min Baseline" 
-            value={Math.round(tempMin)} 
-            unit="°C" 
-            icon={ArrowDown} 
-            color="blue" 
+          <StatCard
+            label="Min Baseline"
+            value={Math.round(tempMin)}
+            unit="°C"
+            icon={ArrowDown}
+            color="blue"
           />
         </div>
 
@@ -137,8 +187,8 @@ export default function TemperatureStatsPage() {
                   <div className="flex justify-between items-center border-b border-white/5 pb-4 group">
                     <span className="text-xs font-black text-white/40 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">Vector Condition</span>
                     <div className="flex items-center gap-3">
-                       <span className="px-3 py-1 bg-primary/20 rounded-lg text-[10px] font-black text-primary uppercase border border-primary/20">{weather.condition}</span>
-                       <span className="text-xl font-black text-white uppercase italic tracking-tighter">{weather.description}</span>
+                      <span className="px-3 py-1 bg-primary/20 rounded-lg text-[10px] font-black text-primary uppercase border border-primary/20">{weather.condition}</span>
+                      <span className="text-xl font-black text-white uppercase italic tracking-tighter">{weather.description}</span>
                     </div>
                   </div>
                 </div>

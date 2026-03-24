@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Cloud, Sun, CloudRain, Wind } from "lucide-react";
-import axios from "axios";
+import { Cloud, Sun } from "lucide-react";
+import { weatherService, forecastService } from "@/lib/apiClient";
 
 export function WeatherAdminPanel({ onDataAdded }: { onDataAdded: () => void }) {
     const [city, setCity] = useState("Kathmandu");
@@ -25,13 +25,12 @@ export function WeatherAdminPanel({ onDataAdded }: { onDataAdded: () => void }) 
     const handleSeedData = async () => {
         setLoading(true);
         setMessage("");
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
         const selectedWeather = weatherConditions.find(w => w.value === weatherCondition) || weatherConditions[0];
 
         try {
             // Seed Current Weather
-            await axios.post(`${baseUrl}/api/weather`, {
+            await weatherService.createWeatherData({
                 city: city,
                 country: "NP",
                 coordinates: { lat: 27.7172, lon: 85.324 },
@@ -61,7 +60,7 @@ export function WeatherAdminPanel({ onDataAdded }: { onDataAdded: () => void }) 
                 date.setDate(date.getDate() + i);
                 return {
                     city: city,
-                    date: date,
+                    date: date.toISOString(), // pass ISO string
                     temperature: 20 + Math.random() * 5, // Random temp between 20-25
                     weather: weatherCondition,
                     description: selectedWeather.label,
@@ -70,7 +69,7 @@ export function WeatherAdminPanel({ onDataAdded }: { onDataAdded: () => void }) 
             });
 
             for (const day of forecastList) {
-                await axios.post(`${baseUrl}/api/forecast`, day);
+                await forecastService.createForecast(day);
             }
 
             // Note: Hourly forecast is now automatically fetched from OpenWeatherMap by the backend

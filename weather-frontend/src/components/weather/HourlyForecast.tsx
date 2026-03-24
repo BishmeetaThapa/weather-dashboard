@@ -1,49 +1,64 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Cloud, Sun, CloudRain, CloudSnow, Zap, CloudSun } from 'lucide-react';
-import { HourlyForecast as HourlyType } from '@/lib/weatherApi';
+import { Card, CardContent } from "@/components/ui/Card";
+
+import { HourlyForecast as HourlyForecastType } from "@/lib/weatherApi";
+import { Cloud, CloudRain, CloudSnow, Sun, Zap } from "lucide-react";
 
 interface HourlyForecastProps {
-  hourly: HourlyType[];
+  hourlyData?: HourlyForecastType[];
 }
 
-const WeatherIcon = ({ icon, size = 24 }: { icon: string; size?: number }) => {
-  switch (icon) {
-    case 'sun': return <Sun size={size} className="text-yellow-400" />;
-    case 'cloud': return <Cloud size={size} className="text-gray-300" />;
-    case 'cloud-sun': return <CloudSun size={size} className="text-yellow-200" />;
-    case 'cloud-rain': return <CloudRain size={size} className="text-blue-400" />;
-    case 'cloud-snow': return <CloudSnow size={size} className="text-blue-200" />;
-    case 'zap': return <Zap size={size} className="text-purple-400" />;
-    default: return <Cloud size={size} className="text-gray-300" />;
+export default function HourlyForecast({ hourlyData }: HourlyForecastProps) {
+  if (!hourlyData || hourlyData.length === 0) {
+    return (
+      <Card className="bg-gray-800/20 backdrop-blur-xl border border-gray-700/40 rounded-3xl">
+        <CardContent className="p-6 text-center">
+          <p className="text-white/60 font-bold">No hourly forecast data available</p>
+        </CardContent>
+      </Card>
+    );
   }
-};
 
-const HourlyForecast: React.FC<HourlyForecastProps> = ({ hourly }) => {
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case 'sun': return <Sun className="w-8 h-8 text-amber-400" />;
+      case 'cloud': return <Cloud className="w-8 h-8 text-white/70" />;
+      case 'cloud-rain': return <CloudRain className="w-8 h-8 text-blue-400" />;
+      case 'cloud-snow': return <CloudSnow className="w-8 h-8 text-white" />;
+      case 'zap': return <Zap className="w-8 h-8 text-yellow-400" />;
+      default: return <Sun className="w-8 h-8 text-amber-400" />;
+    }
+  };
+
+  // Get up to 24 hours
+  const hourlyForecast = hourlyData.slice(0, 24);
+
+  const formatHour = (timeStr: string): string => {
+    return timeStr; // time is already formatted in mapping
+  };
+
   return (
-    <div className="w-full bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-6 mb-8 overflow-hidden">
-      <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider mb-6 ml-2">Hourly Forecast</h3>
-      <div className="flex overflow-x-auto pb-4 gap-6 scrollbar-hide snap-x">
-        {hourly.map((hour) => (
-          <div
-            key={hour.id}
-            className="flex flex-col items-center min-w-[80px] snap-center group"
-          >
-            <span className="text-sm font-medium text-white/70 mb-4 group-hover:text-white transition-colors">
-              {hour.time}
-            </span>
-            <div className="mb-4 p-3 bg-white/5 rounded-2xl group-hover:bg-white/10 transition-all transform group-hover:scale-110">
-              <WeatherIcon icon={hour.icon} size={28} />
+    <Card className="bg-gray-800/20 backdrop-blur-xl border border-gray-700/40 rounded-3xl">
+      <CardContent className="p-6">
+        <h3 className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em] mb-6">
+          Hourly Forecast
+        </h3>
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+          {hourlyForecast.map((hour, index) => (
+            <div
+              key={index}
+              className="flex-shrink-0 w-16 text-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+            >
+              <p className="text-[10px] font-medium text-white/70">
+                {index === 0 ? "Now" : formatHour(hour.time)}
+              </p>
+              <div className="flex justify-center my-3">{getIconComponent(hour.icon)}</div>
+              <p className="text-sm font-bold text-white">{Math.round(hour.temp)}°</p>
             </div>
-            <span className="text-lg font-bold text-white tracking-tight">
-              {Math.round(hour.temp)}°
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
-};
-
-export default HourlyForecast;
+}

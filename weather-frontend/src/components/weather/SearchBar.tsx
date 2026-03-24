@@ -18,7 +18,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   };
 
   return (
-    <form 
+    <form
       onSubmit={handleSubmit}
       className="relative w-full max-w-md mx-auto mb-8"
       aria-label="Search for a city"
@@ -31,7 +31,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-white/20 transition-all"
         aria-label="City search input"
       />
-      <button 
+      <button
         type="submit"
         className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors"
         aria-label="Perform search"

@@ -1,53 +1,74 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Cloud, Sun, CloudRain, CloudSnow, Zap, CloudSun } from 'lucide-react';
-import { DailyForecast as DailyType } from '@/lib/weatherApi';
+import { Card, CardContent } from "@/components/ui/Card";
+
+import { DailyForecast as DailyForecastType } from "@/lib/weatherApi";
+import { Cloud, CloudRain, CloudSnow, Sun, Zap } from "lucide-react";
 
 interface WeeklyForecastProps {
-  daily: DailyType[];
+  dailyData?: DailyForecastType[];
 }
 
-const WeatherIcon = ({ icon, size = 24 }: { icon: string; size?: number }) => {
-  switch (icon) {
-    case 'sun': return <Sun size={size} className="text-yellow-400" />;
-    case 'cloud': return <Cloud size={size} className="text-gray-300" />;
-    case 'cloud-sun': return <CloudSun size={size} className="text-yellow-200" />;
-    case 'cloud-rain': return <CloudRain size={size} className="text-blue-400" />;
-    case 'cloud-snow': return <CloudSnow size={size} className="text-blue-200" />;
-    case 'zap': return <Zap size={size} className="text-purple-400" />;
-    default: return <Cloud size={size} className="text-gray-300" />;
+export default function WeeklyForecast({ dailyData }: WeeklyForecastProps) {
+  if (!dailyData || dailyData.length === 0) {
+    return (
+      <Card className="bg-gray-800/20 backdrop-blur-xl border border-gray-700/40 rounded-3xl">
+        <CardContent className="p-6 text-center">
+          <p className="text-white/60 font-bold">No weekly forecast data available</p>
+        </CardContent>
+      </Card>
+    );
   }
-};
 
-const WeeklyForecast: React.FC<WeeklyForecastProps> = ({ daily }) => {
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case 'sun': return <Sun className="w-6 h-6 text-amber-400" />;
+      case 'cloud': return <Cloud className="w-6 h-6 text-white/70" />;
+      case 'cloud-rain': return <CloudRain className="w-6 h-6 text-blue-400" />;
+      case 'cloud-snow': return <CloudSnow className="w-6 h-6 text-white" />;
+      case 'zap': return <Zap className="w-6 h-6 text-yellow-400" />;
+      default: return <Sun className="w-6 h-6 text-amber-400" />;
+    }
+  };
+
+  const dailyForecast = dailyData.slice(0, 7);
+
   return (
-    <div className="w-full bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-6 h-full shadow-lg">
-      <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider mb-6 ml-2 text-center md:text-left">7-Day Forecast</h3>
-      <div className="flex flex-col gap-1">
-        {daily.map((day) => (
-          <div 
-            key={day.id} 
-            className="flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-all group"
-          >
-            <span className="w-12 text-sm font-semibold text-white/90 group-hover:text-white">
-              {day.day}
-            </span>
-            <div className="flex items-center gap-3">
-              <WeatherIcon icon={day.icon} size={22} />
-              <span className="text-sm text-white/60 hidden sm:inline-block w-24 truncate text-center capitalize">
-                {day.condition}
-              </span>
+    <Card className="bg-gray-800/20 backdrop-blur-xl border border-gray-700/40 rounded-3xl">
+      <CardContent className="p-6">
+        <h3 className="text-[10px] font-black text-white/50 uppercase tracking-[0.3em] mb-6">
+          7-Day Forecast
+        </h3>
+        <div className="space-y-3">
+          {dailyForecast.map((day, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors"
+            >
+              <div className="flex items-center gap-4 w-32">
+                <span className="flex items-center justify-center w-8">{getIconComponent(day.icon)}</span>
+                <span className="text-sm font-bold text-white">{day.day}</span>
+              </div>
+              <div className="flex items-center gap-2 flex-1 justify-center">
+                <span className="text-sm font-medium text-white/70">{Math.round(day.temp_min)}°</span>
+                <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-amber-500 rounded-full"
+                    style={{
+                      width: `${Math.min(100, ((day.temp_max - day.temp_min) / 30) * 100)}%`,
+                      marginLeft: `${Math.min(50, ((day.temp_min + 10) / 50) * 100)}%`,
+                    }}
+                  ></div>
+                </div>
+                <span className="text-sm font-bold text-white">{Math.round(day.temp_max)}°</span>
+              </div>
+              <div className="w-16 text-right">
+                <span className="text-xs font-medium text-white/60">--%</span>
+              </div>
             </div>
-            <div className="flex items-center gap-4 w-20 justify-end">
-              <span className="text-sm font-bold text-white">{Math.round(day.temp_max)}°</span>
-              <span className="text-sm font-medium text-white/40">{Math.round(day.temp_min)}°</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
-};
-
-export default WeeklyForecast;
+}

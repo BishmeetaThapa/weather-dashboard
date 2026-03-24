@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { MapPin, Navigation, Loader2, AlertCircle } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { MapPin, Navigation, Loader2, AlertCircle, RefreshCw, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { weatherService } from "@/lib/apiClient";
 
+const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
+
 export default function LocationsPage() {
     const [locations, setLocations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [autoRefresh, setAutoRefresh] = useState(true);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const loadLocations = useCallback(async () => {
         try {
@@ -18,6 +23,7 @@ export default function LocationsPage() {
             setError(null);
             const data = await weatherService.getWeatherData();
             setLocations(data);
+            setLastUpdated(new Date());
         } catch (error) {
             console.error("Failed to load locations:", error);
             setError("Unable to connect to the weather network.");
@@ -29,6 +35,30 @@ export default function LocationsPage() {
     useEffect(() => {
         loadLocations();
     }, [loadLocations]);
+
+    // Auto-refresh functionality
+    useEffect(() => {
+        if (autoRefresh) {
+            intervalRef.current = setInterval(() => {
+                loadLocations();
+            }, REFRESH_INTERVAL);
+        }
+
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, [autoRefresh, loadLocations]);
+
+    const toggleAutoRefresh = () => {
+        setAutoRefresh(prev => !prev);
+    };
+
+    const formatLastUpdated = (date: Date | null) => {
+        if (!date) return "";
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
 
     return (
         <MainLayout pageTitle="Global Nodes">
@@ -52,6 +82,25 @@ export default function LocationsPage() {
                                 View tracked cities and regions across your global network.
                             </p>
                         </motion.div>
+
+                        <div className="flex items-center gap-4">
+                            {lastUpdated && (
+                                <span className="flex items-center gap-2 text-sm text-white/40">
+                                    <Clock size={14} />
+                                    Updated: {formatLastUpdated(lastUpdated)}
+                                </span>
+                            )}
+                            <button
+                                onClick={toggleAutoRefresh}
+                                className={`p-2 rounded-xl transition-all ${autoRefresh
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : "bg-white/10 text-white/40"
+                                    }`}
+                                title={autoRefresh ? "Auto-refresh ON (2 min)" : "Auto-refresh OFF"}
+                            >
+                                <RefreshCw size={16} className={autoRefresh ? "animate-pulse" : ""} />
+                            </button>
+                        </div>
 
                     </header>
 

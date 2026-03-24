@@ -28,7 +28,7 @@ export function DashboardHeader({
     };
 
     return (
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 relative z-10">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                 <h1 className="text-4xl font-extrabold tracking-tight text-white">Weather Dashboard</h1>
                 <div className="flex items-center gap-3 mt-1">

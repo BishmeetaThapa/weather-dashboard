@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { fetchWeather, FullWeatherData } from "@/lib/weatherApi";
 import SearchBar from "@/components/weather/SearchBar";
 import CurrentWeather from "@/components/weather/CurrentWeather";
@@ -17,10 +18,13 @@ import { MainLayout } from "@/components/layout/MainLayout";
 const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 minutes
 
 export default function ForecastPage() {
+  const searchParams = useSearchParams();
+  const initialCity = searchParams.get("city") || "Kathmandu";
+
   const [weather, setWeather] = useState<FullWeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [city, setCity] = useState("Kathmandu");
+  const [city, setCity] = useState(initialCity);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -118,8 +122,8 @@ export default function ForecastPage() {
               <button
                 onClick={toggleAutoRefresh}
                 className={`p-2 rounded-xl transition-all ${autoRefresh
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "bg-white/10 text-white/40"
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "bg-white/10 text-white/40"
                   }`}
                 title={autoRefresh ? "Auto-refresh ON (2 min)" : "Auto-refresh OFF"}
               >
@@ -156,12 +160,12 @@ export default function ForecastPage() {
                 transition={{ delay: 0.1, duration: 0.6 }}
                 className="md:col-span-8 space-y-8"
               >
-                <CurrentWeather data={weather} />
+                <CurrentWeather weatherData={weather} />
 
                 <div className="space-y-4">
-                  <HourlyForecast hourly={weather.hourly} />
+                  <HourlyForecast hourlyData={weather.hourly} />
                   <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider ml-2">Extra Insights</h3>
-                  <WeatherDetails data={weather} />
+                  <WeatherDetails weatherData={weather} />
                 </div>
               </motion.div>
 
@@ -172,7 +176,7 @@ export default function ForecastPage() {
                 transition={{ delay: 0.2, duration: 0.6 }}
                 className="md:col-span-4"
               >
-                <WeeklyForecast daily={weather.daily} />
+                <WeeklyForecast dailyData={weather.daily} />
 
                 {/* Premium Promo / Info Card */}
                 <div className="mt-8 p-6 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden relative group">
