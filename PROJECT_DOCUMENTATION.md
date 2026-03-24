@@ -384,4 +384,13 @@ weather-dashboard/
 
 ---
 
+## 📝 Recent Changes
+
+| Date | Change | Description |
+|------|--------|-------------|
+| 2026-03-24 | Bug Fix | Fixed hourly forecast temperature not updating after editing in admin panel |
+| 2026-03-24 | Refactor | Updated LocationCard component styling with consistent design tokens |
+
+---
+
 *This documentation is for personal reference. Do not push to GitHub.*
