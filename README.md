@@ -253,6 +253,15 @@ This project is distributed under the MIT License.
 
 ---
 
+## 📝 Recent Changes
+
+| Date | Change | Description |
+|------|--------|-------------|
+| 2026-03-24 | Bug Fix | Fixed hourly forecast temperature not updating after editing in admin panel |
+| 2026-03-24 | Refactor | Updated LocationCard component styling with consistent design tokens |
+
+---
+
 ## 👤 Project Author
 
 **Bishmeeta Thapa**
